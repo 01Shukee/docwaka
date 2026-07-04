@@ -1,0 +1,155 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ─────────────────────────────────────────────────────────────────────
+
+enum Role {
+  SYS_ADMIN
+  HOD
+  DEAN
+  DEPT_ADMIN
+  STAFF
+}
+
+enum AccountStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DocumentStatus {
+  DRAFT
+  PENDING
+  ACCEPTED
+  REJECTED
+  DELIVERED
+}
+
+enum AuditAction {
+  DISPATCHED
+  SIGNED
+  ACCEPTED
+  REJECTED
+  DELIVERED
+}
+
+// ── Models ────────────────────────────────────────────────────────────────────
+
+model Department {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+
+  @@map("departments")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  password     String
+  role         Role
+  status       AccountStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  // The user who approved this account
+  approvedById String?
+  approvedBy   User?   @relation("ApproverApproved", fields: [approvedById], references: [id])
+  approvedUsers User[] @relation("ApproverApproved")
+
+  // Documents
+  sentDocuments     Document[]  @relation("DocumentSender")
+  receivedDocuments Document[]  @relation("DocumentRecipient")
+
+  // Signatures
+  signatures Signature[]
+
+  // Audit logs authored by this user
+  auditLogs AuditLog[]
+
+  // Rejection logs authored by this user
+  rejectionLogs RejectionLog[]
+
+  @@map("users")
+}
+
+model Document {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  fileUrl     String?
+  status      DocumentStatus @default(PENDING)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  senderId    String
+  sender      User   @relation("DocumentSender",    fields: [senderId],    references: [id])
+
+  recipientId String
+  recipient   User   @relation("DocumentRecipient", fields: [recipientId], references: [id])
+
+  // Relations
+  signatures    Signature[]
+  rejectionLogs RejectionLog[]
+  auditLogs     AuditLog[]
+
+  @@map("documents")
+}
+
+model Signature {
+  id         String   @id @default(cuid())
+  data       String   // base64 PNG data URL
+  createdAt  DateTime @default(now())
+
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@map("signatures")
+}
+
+model RejectionLog {
+  id         String   @id @default(cuid())
+  reason     String
+  createdAt  DateTime @default(now())
+
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  rejectedById String
+  rejectedBy   User   @relation(fields: [rejectedById], references: [id])
+
+  @@map("rejection_logs")
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  action    AuditAction
+  details   String?
+  createdAt DateTime    @default(now())
+
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}

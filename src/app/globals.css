@@ -1,0 +1,449 @@
+/* src/app/globals.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Saans font (self-hosted fallback chain) ─────────────────────────────────
+   Saans is a commercial typeface. If you have a licence, place the font files
+   in /public/fonts/ and uncomment the @font-face blocks below.
+   Without a licence the stack falls back to DM Sans (Google Fonts import
+   below) then Inter, which shares similar proportions.
+   ────────────────────────────────────────────────────────────────────────── */
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap");
+
+/*
+@font-face {
+  font-family: "Saans";
+  src: url("/fonts/Saans-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Saans";
+  src: url("/fonts/Saans-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Saans";
+  src: url("/fonts/Saans-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+*/
+
+/* ── DESIGN.md: Mobbin Minimal — CSS Custom Properties ──────────────────────
+   All colour, typography, spacing, and radius tokens expressed as variables
+   so they can be referenced in non-Tailwind contexts (e.g. canvas, SVG).
+   ────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Colors */
+  --color-primary:    #141414;
+  --color-secondary:  #707070;
+  --color-tertiary:   #e5e7eb;
+  --color-neutral:    #ffffff;
+  --color-surface:    #f7f7f7;
+  --color-on-surface: #141414;
+  --color-error:      #d92d20;
+  --color-accent:     #000000;
+  --color-background: #ffffff;
+  --color-text:       #141414;
+
+  /* Border radius */
+  --radius-none: 0px;
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-full: 9999px;
+
+  /* Spacing */
+  --space-xs: 8px;
+  --space-sm: 24px;
+  --space-md: 40px;
+  --space-lg: 80px;
+  --space-xl: 120px;
+
+  /* Component heights */
+  --height-btn:   44px;
+  --height-input: 40px;
+}
+
+/* ── Base layer ──────────────────────────────────────────────────────────────*/
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: "Saans", "DM Sans", "Inter", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--color-text);
+    background-color: var(--color-background);
+  }
+
+  /* Accessible focus ring that fits the minimal aesthetic */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Remove default list styles */
+  ul,
+  ol {
+    list-style: none;
+  }
+
+  /* Anchor reset */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ── Component layer — DESIGN.md token-driven component classes ──────────────*/
+@layer components {
+
+  /* ── button-primary ──────────────────────────────────────────────────────
+     backgroundColor: primary (#141414)
+     textColor: neutral (#FFFFFF)
+     rounded: full
+     padding: 0 16px
+     height: 44px
+     ────────────────────────────────────────────────────────────────────── */
+  .btn-primary {
+    display:         inline-flex;
+    align-items:     center;
+    justify-content: center;
+    gap:             8px;
+    height:          var(--height-btn);
+    padding:         0 16px;
+    background-color: var(--color-primary);
+    color:           var(--color-neutral);
+    border-radius:   var(--radius-full);
+    font-family:     inherit;
+    font-size:       16px;
+    font-weight:     600;
+    line-height:     20px;
+    letter-spacing:  0px;
+    border:          none;
+    cursor:          pointer;
+    white-space:     nowrap;
+    transition:      opacity 150ms ease, transform 100ms ease;
+    user-select:     none;
+  }
+  .btn-primary:hover:not(:disabled) {
+    opacity: 0.88;
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ── button-secondary ───────────────────────────────────────────────────
+     backgroundColor: neutral (#FFFFFF)
+     textColor: primary (#141414)
+     border: 1px solid tertiary (#E5E7EB)
+     rounded: full
+     ────────────────────────────────────────────────────────────────────── */
+  .btn-secondary {
+    display:         inline-flex;
+    align-items:     center;
+    justify-content: center;
+    gap:             8px;
+    height:          var(--height-btn);
+    padding:         0 16px;
+    background-color: var(--color-neutral);
+    color:           var(--color-primary);
+    border-radius:   var(--radius-full);
+    border:          1px solid var(--color-tertiary);
+    font-family:     inherit;
+    font-size:       16px;
+    font-weight:     600;
+    line-height:     20px;
+    letter-spacing:  0px;
+    cursor:          pointer;
+    white-space:     nowrap;
+    transition:      background-color 150ms ease, transform 100ms ease;
+    user-select:     none;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background-color: var(--color-surface);
+  }
+  .btn-secondary:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .btn-secondary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ── button-link ─────────────────────────────────────────────────────────
+     backgroundColor: transparent
+     textColor: secondary (#707070)
+     no border, no radius
+     ────────────────────────────────────────────────────────────────────── */
+  .btn-link {
+    display:     inline-flex;
+    align-items: center;
+    gap:         6px;
+    padding:     0;
+    background:  transparent;
+    border:      none;
+    color:       var(--color-secondary);
+    font-family: inherit;
+    font-size:   16px;
+    font-weight: 456;
+    line-height: 20px;
+    cursor:      pointer;
+    transition:  color 150ms ease;
+    user-select: none;
+  }
+  .btn-link:hover:not(:disabled) {
+    color: var(--color-primary);
+  }
+  .btn-link:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ── card ────────────────────────────────────────────────────────────────
+     backgroundColor: neutral (#FFFFFF)
+     border: 1px solid tertiary (#E5E7EB)
+     rounded: md (8px)
+     padding: 16px
+     ────────────────────────────────────────────────────────────────────── */
+  .card {
+    background-color: var(--color-neutral);
+    border:           1px solid var(--color-tertiary);
+    border-radius:    var(--radius-md);
+    padding:          16px;
+  }
+
+  /* ── input ───────────────────────────────────────────────────────────────
+     backgroundColor: surface (#F7F7F7)
+     textColor: on-surface (#141414)
+     border: 1px solid tertiary (#E5E7EB)
+     rounded: full
+     height: 40px
+     padding: 0 16px
+     ────────────────────────────────────────────────────────────────────── */
+  .input-field {
+    width:            100%;
+    height:           var(--height-input);
+    padding:          0 16px;
+    background-color: var(--color-surface);
+    color:            var(--color-on-surface);
+    border:           1px solid var(--color-tertiary);
+    border-radius:    var(--radius-full);
+    font-family:      inherit;
+    font-size:        16px;
+    font-weight:      400;
+    line-height:      24px;
+    outline:          none;
+    transition:       border-color 150ms ease, box-shadow 150ms ease;
+    appearance:       none;
+  }
+  .input-field::placeholder {
+    color: var(--color-secondary);
+  }
+  .input-field:focus {
+    border-color: var(--color-primary);
+    box-shadow:   0 0 0 3px rgba(20, 20, 20, 0.08);
+  }
+  .input-field:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Textarea variant — no fixed height, rounded-md instead of full */
+  .textarea-field {
+    width:            100%;
+    padding:          12px 16px;
+    background-color: var(--color-surface);
+    color:            var(--color-on-surface);
+    border:           1px solid var(--color-tertiary);
+    border-radius:    var(--radius-md);
+    font-family:      inherit;
+    font-size:        16px;
+    font-weight:      400;
+    line-height:      24px;
+    outline:          none;
+    resize:           vertical;
+    transition:       border-color 150ms ease, box-shadow 150ms ease;
+  }
+  .textarea-field::placeholder {
+    color: var(--color-secondary);
+  }
+  .textarea-field:focus {
+    border-color: var(--color-primary);
+    box-shadow:   0 0 0 3px rgba(20, 20, 20, 0.08);
+  }
+
+  /* ── chip ────────────────────────────────────────────────────────────────
+     backgroundColor: surface (#F7F7F7)
+     textColor: on-surface (#141414)
+     rounded: full
+     padding: 0 12px
+     label-sm typography
+     ────────────────────────────────────────────────────────────────────── */
+  .chip {
+    display:          inline-flex;
+    align-items:      center;
+    gap:              6px;
+    padding:          4px 12px;
+    background-color: var(--color-surface);
+    color:            var(--color-on-surface);
+    border:           1px solid var(--color-tertiary);
+    border-radius:    var(--radius-full);
+    font-size:        12px;
+    font-weight:      500;
+    line-height:      16px;
+    letter-spacing:   0.04em;
+    white-space:      nowrap;
+  }
+}
+
+/* ── Animations ──────────────────────────────────────────────────────────────*/
+@keyframes fadeScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────────*/
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-tertiary);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
+}
+
+/* ── Utilities ───────────────────────────────────────────────────────────────*/
+@layer utilities {
+  /* Typography scale helpers matching DESIGN.md */
+  .text-display {
+    font-size:      56px;
+    line-height:    56px;
+    font-weight:    652;
+    letter-spacing: -0.6px;
+  }
+  .text-headline-lg {
+    font-size:   43px;
+    line-height: 52px;
+    font-weight: 400;
+  }
+  .text-headline-md {
+    font-size:   33px;
+    line-height: 40px;
+    font-weight: 400;
+  }
+  .text-headline-sm {
+    font-size:   26px;
+    line-height: 31px;
+    font-weight: 400;
+  }
+  .text-body-lg {
+    font-size:   20px;
+    line-height: 30px;
+    font-weight: 400;
+  }
+  .text-body-md {
+    font-size:   16px;
+    line-height: 24px;
+    font-weight: 400;
+  }
+  .text-body-sm {
+    font-size:   14px;
+    line-height: 20px;
+    font-weight: 400;
+  }
+  .text-label-lg {
+    font-size:   16px;
+    line-height: 20px;
+    font-weight: 600;
+  }
+  .text-label-md {
+    font-size:   16px;
+    line-height: 20px;
+    font-weight: 500;
+  }
+  .text-label-sm {
+    font-size:      12px;
+    line-height:    16px;
+    font-weight:    500;
+    letter-spacing: 0.04em;
+  }
+
+  /* Spacing helpers */
+  .section-gap-xs { gap: var(--space-xs); }
+  .section-gap-sm { gap: var(--space-sm); }
+  .section-gap-md { gap: var(--space-md); }
+  .section-gap-lg { gap: var(--space-lg); }
+  .section-gap-xl { gap: var(--space-xl); }
+
+  /* Sidebar layout constants */
+  .sidebar-width { width: 240px; }
+  .main-offset   { margin-left: 240px; }
+}
