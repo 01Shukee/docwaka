@@ -75,7 +75,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Role | Email | Password |
 |---|---|---|
-| System Administrator | `admin@docwaka.com` | `Admin@1234` |
+| System Administrator | `********` | `********` |
 
 All other accounts are created via `/register` and require approval before login.
 
@@ -146,7 +146,7 @@ docwaka/
 
 ## Design System
 
-Mobbin Minimal — key tokens:
+Minimal — key tokens:
 
 | Token | Value |
 |---|---|

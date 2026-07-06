@@ -1,174 +1,132 @@
 // src/components/layout/Sidebar.tsx
-
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import {
-  LayoutDashboard,
-  Inbox,
-  FilePlus2,
-  ClipboardList,
-  ShieldCheck,
-  User,
-  LogOut,
-} from "lucide-react";
+  IconLayoutDashboard, IconInbox, IconFilePlus,
+  IconClipboardList, IconShieldCheck, IconUser,
+  IconLogout, IconX,
+} from "@tabler/icons-react";
 import SidebarLink from "./SidebarLink";
 import { ROLE_LABELS } from "@/types/user";
 import type { Role } from "@/types/user";
 
 interface SidebarProps {
-  userName:     string;
-  userRole:     Role;
-  userEmail:    string;
-  inboxCount?:  number;
+  userName:    string;
+  userRole:    Role;
+  userEmail:   string;
+  inboxCount?: number;
+  open:        boolean;
+  onClose:     () => void;
 }
-
-/**
- * DESIGN.md layout:
- *   - Fixed 240px sidebar, white background, right border tertiary (#E5E7EB)
- *   - Logo at top, nav links in middle, user profile at bottom
- *   - Broad left margin, clean alignment — curated not dashboard-like
- *
- * Role-scoped nav:
- *   All roles        → Dashboard, Documents (Inbox/Outbox), New Document, Profile
- *   DEPT_ADMIN+      → Admin
- *   SYS_ADMIN        → Audit Log (system-wide)
- *   DEPT_ADMIN/HOD/DEAN → Audit Log (dept-scoped)
- */
 
 const ADMIN_ROLES: Role[] = ["SYS_ADMIN", "HOD", "DEAN", "DEPT_ADMIN"];
 const AUDIT_ROLES: Role[] = ["SYS_ADMIN", "HOD", "DEAN", "DEPT_ADMIN"];
 
+const ROLE_ACCENTS: Record<Role, string> = {
+  SYS_ADMIN:  "bg-[#EEF2FF] text-[#4338CA]",
+  HOD:        "bg-[#EFF6FF] text-[#1D4ED8]",
+  DEAN:       "bg-[#EFF6FF] text-[#1D4ED8]",
+  DEPT_ADMIN: "bg-[#ECFDF5] text-[#047857]",
+  STAFF:      "bg-[#F7F7F7] text-[#141414]",
+};
+
 export default function Sidebar({
-  userName,
-  userRole,
-  userEmail,
-  inboxCount = 0,
+  userName, userRole, inboxCount = 0, open, onClose,
 }: SidebarProps) {
   const showAdmin = ADMIN_ROLES.includes(userRole);
   const showAudit = AUDIT_ROLES.includes(userRole);
-
-  // User initials for avatar
-  const initials = userName
-    .split(" ")
-    .slice(0, 2)
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
+  const initials  = userName.split(" ").slice(0, 2).map(n => n[0]).join("").toUpperCase();
+  const accent    = ROLE_ACCENTS[userRole];
 
   return (
-    <aside
-      className={[
-        "fixed inset-y-0 left-0 z-40",
-        "w-[240px] flex flex-col",
-        "bg-neutral border-r border-tertiary",
-        "overflow-y-auto",
-      ].join(" ")}
-    >
-      {/* ── Logo ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2.5 px-5 py-5 border-b border-tertiary shrink-0">
-        <Link href="/dashboard" className="flex items-center gap-2.5 group">
-          <Image
-            src="/logo.svg"
-            alt="DocWaka"
-            width={28}
-            height={28}
-            priority
-          />
-          <span className="text-[16px] font-semibold leading-5 text-on-surface tracking-tight">
-            DocWaka
-          </span>
-        </Link>
-      </div>
-
-      {/* ── Navigation ───────────────────────────────────────────────────── */}
-      <nav className="flex-1 px-3 py-4 flex flex-col gap-0.5" aria-label="Main navigation">
-
-        {/* Core */}
-        <SidebarLink
-          href="/dashboard"
-          label="Dashboard"
-          icon={LayoutDashboard}
-          exact
+    <>
+      {open && (
+        <div
+          className="fixed inset-0 z-30 bg-primary/30 backdrop-blur-[2px] lg:hidden"
+          onClick={onClose}
+          aria-hidden="true"
         />
-        <SidebarLink
-          href="/documents"
-          label="Documents"
-          icon={Inbox}
-          badge={inboxCount}
-        />
-        <SidebarLink
-          href="/documents/new"
-          label="New Document"
-          icon={FilePlus2}
-          exact
-        />
+      )}
 
-        {/* Section divider */}
-        {(showAudit || showAdmin) && (
-          <div className="my-2 border-t border-tertiary" />
-        )}
+      <aside className={[
+        "fixed inset-y-0 left-0 z-40 flex flex-col",
+        "w-[240px] bg-neutral border-r border-tertiary overflow-y-auto",
+        "transition-transform duration-200 ease-in-out",
+        open ? "translate-x-0" : "-translate-x-full",
+        "lg:translate-x-0",
+      ].join(" ")}>
 
-        {/* Audit — dept-scoped or system-wide */}
-        {showAudit && (
-          <SidebarLink
-            href="/audit"
-            label="Audit Log"
-            icon={ClipboardList}
-          />
-        )}
+        {/* ── Logo ─────────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-tertiary shrink-0">
+          <Link href="/dashboard" className="flex items-center gap-2.5" onClick={onClose}>
+            {/* Stickman logo */}
+            <div className="w-8 h-8 rounded-md overflow-hidden shrink-0 flex items-center justify-center bg-white border border-tertiary">
+              <Image
+                src="/logo.jpg"
+                alt="docwaka logo"
+                width={28}
+                height={28}
+                className="object-contain"
+                priority
+              />
+            </div>
+            {/* Wordmark */}
+            <span className="text-[17px] font-black leading-none text-on-surface tracking-tight" style={{ letterSpacing: "-0.5px" }}>
+              docwaka<span className="text-[#3B82F6]">.</span>
+            </span>
+          </Link>
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1 text-secondary hover:text-on-surface rounded-md hover:bg-surface transition-colors"
+            aria-label="Close navigation"
+          >
+            <IconX size={16} stroke={1.5} />
+          </button>
+        </div>
 
-        {/* Admin panel */}
-        {showAdmin && (
-          <SidebarLink
-            href="/admin"
-            label="Admin"
-            icon={ShieldCheck}
-          />
-        )}
-      </nav>
+        {/* ── Nav ──────────────────────────────────────────────────── */}
+        <nav className="flex-1 px-3 py-4 flex flex-col gap-0.5" aria-label="Main navigation">
+          <SidebarLink href="/dashboard"     label="Dashboard"    icon={IconLayoutDashboard} exact onClick={onClose} />
+          <SidebarLink href="/documents"     label="Documents"    icon={IconInbox}           badge={inboxCount} onClick={onClose} />
+          <SidebarLink href="/documents/new" label="New Document" icon={IconFilePlus}        exact onClick={onClose} />
 
-      {/* ── User footer ──────────────────────────────────────────────────── */}
-      <div className="shrink-0 border-t border-tertiary px-3 py-3">
-        {/* Profile link */}
-        <Link
-          href="/profile"
-          className="flex items-center gap-2.5 px-2 py-2 rounded-md hover:bg-surface transition-colors duration-100 group"
-        >
-          {/* Avatar */}
-          <div className="w-7 h-7 rounded-full bg-primary text-neutral flex items-center justify-center shrink-0">
-            <span className="text-[11px] font-semibold leading-none">{initials}</span>
-          </div>
+          {(showAudit || showAdmin) && <div className="my-2 border-t border-tertiary" />}
 
-          {/* Name + role */}
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium leading-4 text-on-surface truncate">
-              {userName}
-            </p>
-            <p className="text-[11px] leading-4 text-secondary truncate">
-              {ROLE_LABELS[userRole]}
-            </p>
-          </div>
+          {showAudit && (
+            <SidebarLink href="/audit" label="Audit Log" icon={IconClipboardList}
+              onClick={onClose} accentClass="hover:text-[#4338CA]" />
+          )}
+          {showAdmin && (
+            <SidebarLink href="/admin" label="Admin" icon={IconShieldCheck}
+              onClick={onClose} accentClass="hover:text-[#047857]" />
+          )}
+        </nav>
 
-          <User size={14} className="shrink-0 text-secondary group-hover:text-on-surface" />
-        </Link>
-
-        {/* Sign out */}
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className={[
-            "w-full flex items-center gap-2.5 px-2 py-2 mt-0.5 rounded-md",
-            "text-[13px] font-medium text-secondary",
-            "hover:bg-surface hover:text-on-surface transition-colors duration-100",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-          ].join(" ")}
-        >
-          <LogOut size={14} className="shrink-0" />
-          Sign out
-        </button>
-      </div>
-    </aside>
+        {/* ── User footer ───────────────────────────────────────────── */}
+        <div className="shrink-0 border-t border-tertiary px-3 py-3">
+          <Link href="/profile" onClick={onClose}
+            className="flex items-center gap-2.5 px-2 py-2 rounded-md hover:bg-surface transition-colors group">
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold ${accent}`}>
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-medium leading-4 text-on-surface truncate">{userName}</p>
+              <p className="text-[11px] leading-4 text-secondary truncate">{ROLE_LABELS[userRole]}</p>
+            </div>
+            <IconUser size={14} stroke={1.5} className="shrink-0 text-secondary group-hover:text-on-surface" />
+          </Link>
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="w-full flex items-center gap-2.5 px-2 py-2 mt-0.5 rounded-md text-[13px] font-medium text-secondary hover:bg-surface hover:text-on-surface transition-colors focus-visible:outline-none"
+          >
+            <IconLogout size={14} stroke={1.5} className="shrink-0" />
+            Sign out
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

@@ -1,28 +1,13 @@
 // src/components/ui/Toast.tsx
-
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useRef,
-  useEffect,
-} from "react";
-import { CheckCircle2, XCircle, AlertCircle, Info, X } from "lucide-react";
+import { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
+import { IconCircleCheck, IconCircleX, IconAlertTriangle, IconInfoCircle, IconX } from "@tabler/icons-react";
 import { createPortal } from "react-dom";
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 type ToastType = "success" | "error" | "warning" | "info";
 
-interface Toast {
-  id:       string;
-  type:     ToastType;
-  message:  string;
-  duration: number;
-}
+interface Toast { id: string; type: ToastType; message: string; duration: number; }
 
 interface ToastContextValue {
   toast:   (message: string, type?: ToastType, duration?: number) => void;
@@ -32,32 +17,17 @@ interface ToastContextValue {
   info:    (message: string) => void;
 }
 
-// ── Context ───────────────────────────────────────────────────────────────────
-
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-// ── Config ────────────────────────────────────────────────────────────────────
-
-const TOAST_CONFIG: Record<
-  ToastType,
-  { icon: React.ElementType; iconColor: string }
-> = {
-  success: { icon: CheckCircle2, iconColor: "text-emerald-500" },
-  error:   { icon: XCircle,      iconColor: "text-error"       },
-  warning: { icon: AlertCircle,  iconColor: "text-yellow-500"  },
-  info:    { icon: Info,         iconColor: "text-blue-500"    },
+const TOAST_CONFIG: Record<ToastType, { icon: React.ElementType; iconClass: string; borderClass: string }> = {
+  success: { icon: IconCircleCheck,   iconClass: "text-[#10B981]", borderClass: "border-l-[#10B981]" },
+  error:   { icon: IconCircleX,       iconClass: "text-[#D92D20]", borderClass: "border-l-[#D92D20]" },
+  warning: { icon: IconAlertTriangle, iconClass: "text-[#F59E0B]", borderClass: "border-l-[#F59E0B]" },
+  info:    { icon: IconInfoCircle,    iconClass: "text-[#3B82F6]", borderClass: "border-l-[#3B82F6]" },
 };
 
-// ── Single Toast Item ─────────────────────────────────────────────────────────
-
-function ToastItem({
-  toast,
-  onRemove,
-}: {
-  toast:    Toast;
-  onRemove: (id: string) => void;
-}) {
-  const { icon: Icon, iconColor } = TOAST_CONFIG[toast.type];
+function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) => void }) {
+  const { icon: Icon, iconClass, borderClass } = TOAST_CONFIG[toast.type];
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -66,44 +36,25 @@ function ToastItem({
   }, [toast.id, toast.duration, onRemove]);
 
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="flex items-start gap-3 w-full max-w-sm px-4 py-3 rounded-md border border-tertiary bg-neutral shadow-md"
-    >
-      <Icon size={18} className={`shrink-0 mt-0.5 ${iconColor}`} />
-      <p className="flex-1 text-[14px] leading-5 font-medium text-on-surface">
-        {toast.message}
-      </p>
-      <button
-        onClick={() => onRemove(toast.id)}
-        aria-label="Dismiss"
-        className="shrink-0 text-secondary hover:text-on-surface transition-colors"
-      >
-        <X size={14} />
+    <div role="status" aria-live="polite" className={`flex items-start gap-3 w-full max-w-sm px-4 py-3 rounded-md border border-tertiary border-l-4 bg-neutral shadow-md ${borderClass}`}>
+      <Icon size={18} stroke={1.5} className={`shrink-0 mt-0.5 ${iconClass}`} />
+      <p className="flex-1 text-[14px] leading-5 font-medium text-on-surface">{toast.message}</p>
+      <button onClick={() => onRemove(toast.id)} aria-label="Dismiss" className="shrink-0 text-secondary hover:text-on-surface transition-colors">
+        <IconX size={14} stroke={1.5} />
       </button>
     </div>
   );
 }
 
-// ── Portal wrapper — only renders after client mount ─────────────────────────
-
 function ToastPortal({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: string) => void }) {
   const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
 
   return createPortal(
-    <div
-      aria-label="Notifications"
-      className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2 items-end pointer-events-none"
-    >
-      {toasts.map((t) => (
-        <div key={t.id} className="pointer-events-auto">
+    <div aria-label="Notifications" className="fixed bottom-6 right-4 sm:right-6 z-[100] flex flex-col gap-2 items-end pointer-events-none">
+      {toasts.map(t => (
+        <div key={t.id} className="pointer-events-auto w-full sm:w-auto">
           <ToastItem toast={t} onRemove={onRemove} />
         </div>
       ))}
@@ -112,29 +63,20 @@ function ToastPortal({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: str
   );
 }
 
-// ── Provider ──────────────────────────────────────────────────────────────────
-
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
-
-  const remove = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+  const remove = useCallback((id: string) => setToasts(prev => prev.filter(t => t.id !== id)), []);
+  const add    = useCallback((message: string, type: ToastType = "info", duration = 4000) => {
+    const id = `${Date.now()}-${Math.random()}`;
+    setToasts(prev => [...prev.slice(-4), { id, type, message, duration }]);
   }, []);
-
-  const add = useCallback(
-    (message: string, type: ToastType = "info", duration = 4000) => {
-      const id = `${Date.now()}-${Math.random()}`;
-      setToasts((prev) => [...prev.slice(-4), { id, type, message, duration }]);
-    },
-    []
-  );
 
   const ctx: ToastContextValue = {
     toast:   add,
-    success: (m) => add(m, "success"),
-    error:   (m) => add(m, "error"),
-    warning: (m) => add(m, "warning"),
-    info:    (m) => add(m, "info"),
+    success: m => add(m, "success"),
+    error:   m => add(m, "error"),
+    warning: m => add(m, "warning"),
+    info:    m => add(m, "info"),
   };
 
   return (
@@ -144,8 +86,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     </ToastContext.Provider>
   );
 }
-
-// ── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);

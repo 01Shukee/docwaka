@@ -1,11 +1,12 @@
 // src/app/page.tsx
+import LandingPage from "@/components/landing/LandingPage";
+import type { Metadata } from "next";
 
-import { redirect } from "next/navigation";
+export const metadata: Metadata = {
+  title: "DocWaka — Document Workflow & Tracking System",
+  description: "FUTO's official document routing and tracking platform. Dispatch, sign, approve, and confirm delivery.",
+};
 
-/**
- * Root path (/) redirects to /dashboard as specified in FSD §4.1.
- * Middleware will then redirect unauthenticated users from /dashboard to /login.
- */
 export default function RootPage() {
-  redirect("/dashboard");
+  return <LandingPage />;
 }
