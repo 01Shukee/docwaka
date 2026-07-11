@@ -3,426 +3,414 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { DocwakaWordmark } from "@/components/layout/Logo";
 
-// ── Colour tokens (mirrors CSS vars) ─────────────────────────────────────────
-const C = {
-  primary:   "#141414",
-  secondary: "#707070",
-  tertiary:  "#E5E7EB",
-  surface:   "#F7F7F7",
-  white:     "#FFFFFF",
-  blue:      "#2563EB",   blueBg: "#EFF6FF",  blueText: "#1D4ED8",
-  amber:     "#D97706",   amberBg: "#FFFBEB", amberText: "#92400E",
-  green:     "#16A34A",   greenBg: "#F0FDF4", greenText: "#166534",
-  red:       "#DC2626",   redBg:  "#FEF2F2",  redText:  "#991B1B",
-  purple:    "#7C3AED",   purpleBg:"#F5F3FF", purpleText:"#5B21B6",
-};
-
-// ── Nav sidebar blocks ────────────────────────────────────────────────────────
-const NAV_ITEMS = [
-  { num: "01", label: "Document Routing", bg: C.primary,  fg: C.white   },
-  { num: "02", label: "Role Hierarchy",   bg: "#1F2937",  fg: C.white   },
-  { num: "03", label: "Audit & Tracking", bg: "#374151",  fg: C.white   },
-  { num: "04", label: "Get Started",      bg: "#6B7280",  fg: C.white   },
+// ─── Ticker ───────────────────────────────────────────────────────────────────
+const TICKER = [
+  { bg: "#141414", color: "#fff",    t: "Document Routing"     },
+  { bg: "#F7F7F7", color: "#141414", t: "Digital Signatures"   },
+  { bg: "#141414", color: "#fff",    t: "Immutable Audit Trail" },
+  { bg: "#F7F7F7", color: "#141414", t: "Role-Gated Access"    },
+  { bg: "#141414", color: "#fff",    t: "57 Departments"        },
+  { bg: "#F7F7F7", color: "#141414", t: "5-State Lifecycle"    },
+  { bg: "#141414", color: "#fff",    t: "Five-Tier Hierarchy"   },
+  { bg: "#F7F7F7", color: "#141414", t: "Real-Time Tracking"   },
 ];
 
-// ── Hero slides ───────────────────────────────────────────────────────────────
+// ─── Hero slides ──────────────────────────────────────────────────────────────
 const SLIDES = [
-  { headline: "Track every\ndocument,\nevery step.",    sub: "FUTO's official document routing and tracking platform — dispatch, sign, approve, and confirm delivery.",         accentDot: C.blue   },
-  { headline: "Five roles.\nOne clear\nchain.",         sub: "Every account is approved by the tier above it. From Sys Admin down to Staff — access is always scoped.",       accentDot: C.amber  },
-  { headline: "Nothing\nlost.\nEver.",                  sub: "Every dispatched, signed, accepted, rejected, or delivered event is written once and never changed.",            accentDot: C.green  },
-  { headline: "Start in\nminutes.\nNot days.",          sub: "Register, get approved by your department administrator, and start routing documents immediately.",              accentDot: C.purple },
+  { h: "Track every\ndocument,\nevery step.",  s: "FUTO's official document routing and tracking platform — no paperwork chase." },
+  { h: "Five roles.\nOne clear\nchain.",        s: "Every account approved by the tier above it. Access always scoped." },
+  { h: "Nothing\nlost.\nEver.",                 s: "Every dispatch, signature, acceptance and delivery — written once, never changed." },
+  { h: "Start in\nminutes.\nNot days.",          s: "Register, get approved by your administrator, and start routing immediately." },
 ];
 
-// ── Doc state chips ───────────────────────────────────────────────────────────
-const DOC_STATES = [
-  { label: "Pending",   bg: C.amberBg,  tc: C.amberText,  dot: C.amber  },
-  { label: "Accepted",  bg: C.greenBg,  tc: C.greenText,  dot: C.green  },
-  { label: "Rejected",  bg: C.redBg,    tc: C.redText,    dot: C.red    },
-  { label: "Delivered", bg: C.blueBg,   tc: C.blueText,   dot: C.blue   },
+// ─── Schools ──────────────────────────────────────────────────────────────────
+const SCHOOLS = [
+  { abbr: "SAAT",  name: "Agriculture & Agricultural Technology", depts: 8,  color: "#FFFBEB", tc: "#B45309" },
+  { abbr: "SBMS",  name: "Basic Medical Sciences",                depts: 2,  color: "#FEF2F2", tc: "#991B1B" },
+  { abbr: "SOBS",  name: "Biological Sciences",                   depts: 5,  color: "#ECFDF5", tc: "#047857" },
+  { abbr: "SEET",  name: "Engineering & Engineering Technology",  depts: 9,  color: "#EFF6FF", tc: "#1D4ED8" },
+  { abbr: "SESET", name: "Electrical Systems & Eng. Technology",  depts: 6,  color: "#EEF2FF", tc: "#4338CA" },
+  { abbr: "SOES",  name: "Environmental Sciences",                depts: 7,  color: "#FDF4FF", tc: "#7E22CE" },
+  { abbr: "SOHT",  name: "Health Technology",                     depts: 5,  color: "#FFF7ED", tc: "#C2410C" },
+  { abbr: "SICT",  name: "Information & Communication Technology",depts: 4,  color: "#F0FDF4", tc: "#15803D" },
+  { abbr: "SLIT",  name: "Logistics & Innovation Technology",     depts: 5,  color: "#F5F3FF", tc: "#6D28D9" },
+  { abbr: "SOPS",  name: "Physical Sciences",                     depts: 6,  color: "#FEFCE8", tc: "#854D0E" },
+  { abbr: "SPGS",  name: "Postgraduate Studies",                  depts: 1,  color: "#F8FAFC", tc: "#475569" },
+  { abbr: "ADMIN", name: "Administrative Units",                  depts: 14, color: "#F7F7F7", tc: "#374151" },
 ];
 
-// ── Pillars ───────────────────────────────────────────────────────────────────
-const PILLARS = [
-  { bg: C.primary, fg: C.white,   accent: C.blue,   icon: "◎", title: "For People",  body: "Built for everyone in FUTO — from the Registrar to the newest staff member. No training required." },
-  { bg: C.surface, fg: C.primary, accent: C.amber,  icon: "→", title: "By Design",   body: "Every flow is deliberate. Document states, approval chains, and audit events follow strict rules." },
-  { bg: "#E5E7EB", fg: C.primary, accent: C.green,  icon: "♡", title: "With Care",   body: "Nothing gets lost. Nothing goes unrecorded. Every document tracked from dispatch to delivery." },
+// ─── Steps ────────────────────────────────────────────────────────────────────
+const STEPS = [
+  { n: "01", t: "Dispatch",          b: "Send to any approved colleague across any department. Attach a file, add context, hit send." },
+  { n: "02", t: "Sign",              b: "Recipient draws or types their signature directly in the browser before accepting." },
+  { n: "03", t: "Accept or reject",  b: "Accept with a signature on record, or reject with a mandatory written reason." },
+  { n: "04", t: "Confirm delivery",  b: "Recipient confirms physical delivery. Document status moves to Delivered — permanently." },
 ];
 
-// ── Features ──────────────────────────────────────────────────────────────────
-const FEATURES = [
-  { icon: "→", accent: C.blue,   title: "End-to-end routing",     body: "From dispatch to confirmed delivery. Every state logged, every transition visible." },
-  { icon: "✎", accent: C.purple, title: "Digital signatures",     body: "Draw or type. Captured before acceptance, stored permanently against the document." },
-  { icon: "◎", accent: C.green,  title: "Immutable audit trail",  body: "Every action written once, never changed. Fully searchable, role-scoped." },
-  { icon: "▤", accent: C.amber,  title: "43 departments",         body: "All FUTO schools and administrative units pre-loaded and ready." },
-  { icon: "◑", accent: C.red,    title: "Role-scoped access",     body: "Five tiers. Each sees only what their role permits." },
-  { icon: "◻", accent: C.blue,   title: "Real-time inbox",        body: "Pending docs surface first. Badge counts tell you what needs action." },
-];
-
-// ── Role tree ─────────────────────────────────────────────────────────────────
+// ─── Roles ────────────────────────────────────────────────────────────────────
 const ROLES = [
-  { id: "sys",   label: "Sys Admin",   sub: "Approves HOD + Dean",  badge: "Root", accent: C.red,    desc: "Oversees all roles, departments, and the full system-wide audit log." },
-  { id: "hod",   label: "HOD",         sub: "Approves Dept. Admin", badge: null,   accent: C.amber,  desc: "Head of Department — approves Dept. Admins within their faculty." },
-  { id: "dean",  label: "Dean",        sub: "Approves Dept. Admin", badge: null,   accent: C.amber,  desc: "Dean — approves Dept. Admins across their school." },
-  { id: "dept",  label: "Dept. Admin", sub: "Approves Staff",       badge: null,   accent: C.blue,   desc: "Manages and approves Staff accounts within their department." },
-  { id: "staff", label: "Staff",       sub: "Sends & receives",     badge: null,   accent: C.green,  desc: "Can send, receive, sign, accept, and reject documents." },
+  { id: "sys",   l: "Sys Admin",   s: "Approves HOD + Dean",   b: "Root", d: "Oversees all roles, departments, and the full system-wide audit log." },
+  { id: "hod",   l: "HOD",         s: "Approves Dept. Admin",  b: null,   d: "Head of Department — approves Dept. Admins within their faculty." },
+  { id: "dean",  l: "Dean",        s: "Approves Dept. Admin",  b: null,   d: "Dean — approves Dept. Admins across their school." },
+  { id: "dept",  l: "Dept. Admin", s: "Approves Staff",        b: null,   d: "Manages and approves Staff accounts within their department." },
+  { id: "staff", l: "Staff",       s: "Sends & receives docs", b: null,   d: "Can send, receive, sign, accept, and reject documents." },
 ];
 
-// ── Footer grid ───────────────────────────────────────────────────────────────
-const GCOLS = 20; const GROWS = 6; const GTOTAL = GCOLS * GROWS;
-const GCOLORS = [C.primary, C.blue, C.amber, C.green, C.purple, "#D1D5DB", "#E5E7EB"];
+// ─── Doc states ───────────────────────────────────────────────────────────────
+const STATES = [
+  { l: "Pending",   bg: "#FFFBEB", tc: "#B45309", dc: "#F59E0B", note: "Awaiting action"      },
+  { l: "Accepted",  bg: "#ECFDF5", tc: "#047857", dc: "#10B981", note: "Signed & approved"    },
+  { l: "Rejected",  bg: "#FEF2F2", tc: "#991B1B", dc: "#D92D20", note: "Declined with reason" },
+  { l: "Delivered", bg: "#EFF6FF", tc: "#1D4ED8", dc: "#3B82F6", note: "Delivery confirmed"   },
+];
 
+// ─── Grid ─────────────────────────────────────────────────────────────────────
+const GCOLS = 18; const GROWS = 7; const GTOTAL = GCOLS * GROWS;
+const GCOLORS = ["#141414","#D1D5DB","#9CA3AF","#6B7280","#E5E7EB"];
+
+// ─────────────────────────────────────────────────────────────────────────────
 export default function LandingPage() {
   const [slide,      setSlide]      = useState(0);
-  const [activeRole, setActiveRole] = useState<string | null>(null);
-  const [gridCells,  setGridCells]  = useState<string[]>(Array(GTOTAL).fill(C.white));
   const [activeStep, setActiveStep] = useState(0);
+  const [activeRole, setActiveRole] = useState<string | null>(null);
+  const [grid,       setGrid]       = useState<string[]>([]);
+  const [menuOpen,   setMenuOpen]   = useState(false);
 
-  useEffect(() => { const t = setInterval(() => setSlide(s => (s + 1) % 4), 4000); return () => clearInterval(t); }, []);
-  useEffect(() => { const t = setInterval(() => setActiveStep(s => (s + 1) % 4), 3200); return () => clearInterval(t); }, []);
+  useEffect(() => { const t = setInterval(() => setSlide(s => (s+1)%4), 4000); return () => clearInterval(t); }, []);
+  useEffect(() => { const t = setInterval(() => setActiveStep(s => (s+1)%4), 3200); return () => clearInterval(t); }, []);
   useEffect(() => {
+    setGrid(Array(GTOTAL).fill("#fff"));
     const t = setInterval(() => {
-      setGridCells(prev => {
+      setGrid(prev => {
         const next = [...prev];
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 5; i++) {
           const idx = Math.floor(Math.random() * GTOTAL);
-          next[idx] = Math.random() > 0.5 ? GCOLORS[Math.floor(Math.random() * GCOLORS.length)] : C.white;
+          next[idx] = Math.random() > 0.4 ? GCOLORS[Math.floor(Math.random() * GCOLORS.length)] : "#fff";
         }
         return next;
       });
-    }, 250);
+    }, 220);
     return () => clearInterval(t);
   }, []);
 
+  const curSlide   = SLIDES[slide];
   const activeRoleData = ROLES.find(r => r.id === activeRole);
-  const currentSlide   = SLIDES[slide];
 
   return (
-    <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif", background: C.surface, color: C.primary, minHeight: "100vh" }}>
+    <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif", color: "#141414", background: "#fff" }}>
 
-      {/* ══ HERO — sidebar + full-bleed panel ══════════════════════════ */}
-      <section style={{ display: "flex", height: "100vh", minHeight: 600, maxHeight: 900 }}>
-
-        {/* Sidebar */}
-        <aside style={{ width: 196, flexShrink: 0, background: C.white, display: "flex", flexDirection: "column" as const, padding: "24px 14px 20px", gap: 8, borderRight: `1px solid ${C.tertiary}` }}>
-          {/* Logo */}
-          <div style={{ padding: "0 4px 18px", borderBottom: `1px solid ${C.tertiary}`, marginBottom: 2 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.jpg" alt="DocWaka" width={22} height={22} />
-              <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: "-0.6px", color: C.primary }}>docwaka.</span>
-            </div>
-            <div style={{ fontSize: 9, fontWeight: 600, color: "#9CA3AF", letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Document Tracking</div>
-          </div>
-
-          {/* Nav blocks */}
-          {NAV_ITEMS.map((item, i) => (
-            <a key={item.num} href={`#section-${i + 1}`} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "11px 12px", borderRadius: 10, background: item.bg, color: item.fg, textDecoration: "none" }}>
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 700, opacity: 0.6, marginBottom: 3 }}>{item.num}</div>
-                <div style={{ fontSize: 12, fontWeight: 700, lineHeight: "15px" }}>{item.label}</div>
-              </div>
-              <span style={{ fontSize: 13, opacity: 0.55, marginTop: 1 }}>↗</span>
-            </a>
-          ))}
-
-          <Link href="/register" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 42, background: C.primary, color: C.white, borderRadius: 9999, fontSize: 12, fontWeight: 700, textDecoration: "none", marginTop: 4 }}>
-            Get started ↗
-          </Link>
-          <Link href="/login" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 34, border: `1px solid ${C.tertiary}`, background: C.white, color: C.secondary, borderRadius: 9999, fontSize: 11, fontWeight: 500, textDecoration: "none" }}>
-            Sign in
-          </Link>
-        </aside>
-
-        {/* Hero panel */}
-        <div style={{ flex: 1, position: "relative", overflow: "hidden", background: C.primary, transition: "background 600ms" }}>
-          {/* Grid pattern */}
-          <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px)", backgroundSize: "48px 48px" }} />
-
-          {/* Tunnel rings */}
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: "8%", zIndex: 1 }}>
-            <div style={{ position: "relative", width: 380, height: 380 }}>
-              {[1, 0.83, 0.67, 0.53, 0.41, 0.31, 0.23, 0.16].map((scale, i) => (
-                <div key={i} style={{ position: "absolute", inset: 0, border: `1px solid rgba(255,255,255,${0.04 + i * 0.035})`, borderRadius: 10, transform: `scale(${scale})` }} />
-              ))}
-              {/* Accent glow using slide colour */}
-              <div style={{ position: "absolute", inset: "44%", background: currentSlide.accentDot, borderRadius: "50%", opacity: 0.4, boxShadow: `0 0 60px 30px ${currentSlide.accentDot}40`, transition: "background 600ms, box-shadow 600ms" }} />
-            </div>
-          </div>
-
-          {/* Corner status labels with accent colours */}
-          <div style={{ position: "absolute", top: 20, left: 20, zIndex: 3, display: "flex", gap: 6 }}>
-            {DOC_STATES.slice(0, 2).map(s => (
-              <div key={s.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)", borderRadius: 9999, border: "1px solid rgba(255,255,255,0.12)" }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: s.dot, display: "inline-block" }} />
-                <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>{s.label}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ position: "absolute", bottom: 20, left: 20, zIndex: 3, display: "flex", gap: 6 }}>
-            {DOC_STATES.slice(2).map(s => (
-              <div key={s.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)", borderRadius: 9999, border: "1px solid rgba(255,255,255,0.12)" }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: s.dot, display: "inline-block" }} />
-                <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>{s.label}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Hero text */}
-          <div style={{ position: "absolute", inset: 0, zIndex: 2, display: "flex", flexDirection: "column" as const, justifyContent: "flex-end", padding: "48px 56px" }}>
-            {/* Slide dots with accent colours */}
-            <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
-              {SLIDES.map((sl, i) => (
-                <button key={i} onClick={() => setSlide(i)} style={{ width: i === slide ? 20 : 5, height: 5, borderRadius: 9999, background: i === slide ? sl.accentDot : "rgba(255,255,255,0.2)", border: "none", cursor: "pointer", transition: "all 300ms", padding: 0 }} />
-              ))}
-            </div>
-
-            <h1 style={{ fontSize: "clamp(44px,5.5vw,76px)", fontWeight: 800, lineHeight: 1.0, letterSpacing: "-2px", color: C.white, marginBottom: 18, whiteSpace: "pre-line" as const }}>
-              {currentSlide.headline}
-            </h1>
-            <p style={{ fontSize: 15, lineHeight: "25px", color: "rgba(255,255,255,0.55)", maxWidth: 420, marginBottom: 28 }}>
-              {currentSlide.sub}
-            </p>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 48, padding: "0 26px", background: C.white, color: C.primary, borderRadius: 9999, fontSize: 14, fontWeight: 700, textDecoration: "none" }}>
-                Start routing documents ↗
-              </Link>
-              <Link href="/login" style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 48, padding: "0 22px", background: "rgba(255,255,255,0.08)", color: C.white, borderRadius: 9999, fontSize: 13, fontWeight: 600, textDecoration: "none", border: "1px solid rgba(255,255,255,0.18)" }}>
-                Sign in
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══ CARD GRID ══════════════════════════════════════════════════ */}
-      <section id="section-1" style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 32px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr 1fr", gap: 12, minHeight: 360 }}>
-
-          {/* Left — stat card */}
-          <div style={{ background: C.white, border: `1px solid ${C.tertiary}`, borderRadius: 14, padding: 32, display: "flex", flexDirection: "column" as const, justifyContent: "space-between" }}>
-            <div>
-              <div style={{ fontSize: 9, fontWeight: 700, color: "#9CA3AF", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 16 }}>By the numbers</div>
-              {/* Accent number */}
-              <div style={{ fontSize: 72, fontWeight: 800, letterSpacing: "-3px", lineHeight: 1, color: C.blue, marginBottom: 8 }}>43</div>
-              <div style={{ fontSize: 14, color: C.secondary, lineHeight: "21px" }}>departments & units<br />across FUTO, pre-loaded.</div>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column" as const, gap: 7, marginTop: 16 }}>
-              {["Schools of Engineering", "Schools of Science", "Schools of Management", "Administrative Units"].map(d => (
-                <div key={d} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: "#9CA3AF" }}>
-                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: C.blue, opacity: 0.5, display: "inline-block", flexShrink: 0 }} />{d}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Middle dark card */}
-          <div style={{ background: C.primary, borderRadius: 14, padding: 32, display: "flex", flexDirection: "column" as const, justifyContent: "space-between" }}>
-            <div>
-              <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 20 }}>The platform</div>
-              <h2 style={{ fontSize: 30, fontWeight: 700, lineHeight: "38px", letterSpacing: "-0.6px", color: C.white, marginBottom: 14 }}>
-                A shared way<br />of working.
-              </h2>
-              <p style={{ fontSize: 13, lineHeight: "21px", color: "rgba(255,255,255,0.4)", marginBottom: 24 }}>
-                docwaka. connects every department at FUTO through a single, transparent document workflow — from the first dispatch to confirmed physical delivery.
-              </p>
-              {/* Accent dots for each state */}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {DOC_STATES.map(s => (
-                  <div key={s.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", background: "rgba(255,255,255,0.06)", borderRadius: 9999 }}>
-                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: s.dot, display: "inline-block" }} />
-                    <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.55)" }}>{s.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 40, padding: "0 18px", background: C.white, color: C.primary, borderRadius: 9999, fontSize: 13, fontWeight: 700, textDecoration: "none", width: "fit-content", marginTop: 20 }}>
-              Join the platform ↗
-            </Link>
-          </div>
-
-          {/* Right — doc states */}
-          <div style={{ background: C.surface, border: `1px solid ${C.tertiary}`, borderRadius: 14, padding: 32 }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: "#9CA3AF", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 20 }}>Document lifecycle</div>
-            <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
-              {[
-                { s: "Draft",     bg: "#F9FAFB", tc: "#6B7280", dc: "#D1D5DB", note: "Not yet sent" },
-                { s: "Pending",   bg: C.amberBg, tc: C.amberText, dc: C.amber, note: "Awaiting action" },
-                { s: "Accepted",  bg: C.greenBg, tc: C.greenText, dc: C.green, note: "Signed & approved" },
-                { s: "Rejected",  bg: C.redBg,   tc: C.redText,   dc: C.red,   note: "Declined" },
-                { s: "Delivered", bg: C.blueBg,  tc: C.blueText,  dc: C.blue,  note: "Delivery confirmed" },
-              ].map(st => (
-                <div key={st.s} style={{ padding: "9px 12px", background: st.bg, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: st.dc, display: "inline-block", flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, fontWeight: 700, color: st.tc }}>{st.s}</span>
-                  </div>
-                  <span style={{ fontSize: 10, color: "#9CA3AF" }}>{st.note}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══ PILLARS ══════════════════════════════════════════════════ */}
-      <section id="section-2" style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px 48px" }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#9CA3AF", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 24 }}>Our approach</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
-          {PILLARS.map(p => (
-            <div key={p.title} style={{ background: p.bg, borderRadius: 14, padding: 32, minHeight: 260, border: p.bg !== C.primary ? `1px solid ${C.tertiary}` : "none", display: "flex", flexDirection: "column" as const, justifyContent: "space-between" }}>
-              {/* Accent icon background */}
-              <div style={{ width: 44, height: 44, borderRadius: 10, background: p.bg === C.primary ? "rgba(255,255,255,0.08)" : p.accent + "18", border: `1px solid ${p.bg === C.primary ? "rgba(255,255,255,0.15)" : p.accent + "30"}`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
-                <span style={{ fontSize: 20, color: p.bg === C.primary ? C.white : p.accent }}>{p.icon}</span>
-              </div>
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: p.fg, letterSpacing: "-0.3px", marginBottom: 8 }}>{p.title}</div>
-                <div style={{ fontSize: 13, lineHeight: "20px", color: p.fg === C.white ? "rgba(255,255,255,0.5)" : C.secondary }}>{p.body}</div>
-              </div>
+      {/* ═══ TICKER ════════════════════════════════════════════════════════ */}
+      <div style={{ overflow: "hidden", borderBottom: "1px solid #E5E7EB", height: 40 }}>
+        <style>{`@keyframes mq{0%{transform:translateX(0)}100%{transform:translateX(-50%)}} .mq-t{display:flex;animation:mq 28s linear infinite;white-space:nowrap}.mq-t:hover{animation-play-state:paused}`}</style>
+        <div className="mq-t" style={{ height: 40, alignItems: "center" }}>
+          {[...TICKER,...TICKER].map((item,i) => (
+            <div key={i} style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"0 20px", height:40, background:item.bg, color:item.color, fontSize:10, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", borderRight:"1px solid #E5E7EB", flexShrink:0 }}>
+              <span style={{ width:4, height:4, borderRadius:"50%", background:item.color, opacity:0.5, display:"inline-block" }} />
+              {item.t}
             </div>
           ))}
-        </div>
-
-        {/* Wide CTA banner with accent */}
-        <Link href="/register" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, padding: "0 28px", height: 60, background: C.primary, color: C.white, borderRadius: 14, textDecoration: "none" }}>
-          <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px" }}>Ready to get started? Create your account now.</span>
-          <span style={{ fontSize: 18, color: C.amber }}>↗</span>
-        </Link>
-      </section>
-
-      {/* ══ HOW IT WORKS + ROLE TREE ═════════════════════════════════ */}
-      <section id="section-3" style={{ background: C.white, borderTop: `1px solid ${C.tertiary}`, borderBottom: `1px solid ${C.tertiary}` }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64 }}>
-
-          {/* Steps */}
-          <div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: "#9CA3AF", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 14 }}>Process</div>
-            <h2 style={{ fontSize: 36, fontWeight: 700, lineHeight: "43px", letterSpacing: "-0.8px", color: C.primary, marginBottom: 32 }}>From dispatch<br />to delivery.</h2>
-            {[
-              { n: "01", t: "Dispatch",         b: "Send to any approved colleague. Attach a file, add context, hit send.", accent: C.blue   },
-              { n: "02", t: "Sign",             b: "The recipient draws or types their signature before accepting.",         accent: C.purple },
-              { n: "03", t: "Accept or reject", b: "Accept with signature on record, or reject with a mandatory reason.",   accent: C.green  },
-              { n: "04", t: "Confirm delivery", b: "Recipient confirms physical delivery. Status moves to Delivered.",      accent: C.amber  },
-            ].map((step, i) => (
-              <div key={step.n} onClick={() => setActiveStep(i)} style={{ display: "flex", gap: 16, padding: "16px 0", borderBottom: i < 3 ? `1px solid #F3F4F6` : "none", cursor: "pointer" }}>
-                <div style={{ width: 26, height: 26, borderRadius: "50%", border: `1.5px solid ${activeStep === i ? step.accent : C.tertiary}`, background: activeStep === i ? step.accent : "transparent", color: activeStep === i ? C.white : "#9CA3AF", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, transition: "all 200ms" }}>{step.n}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: C.primary, marginBottom: 3 }}>{step.t}</div>
-                  <div style={{ fontSize: 12, lineHeight: "19px", color: "#9CA3AF", maxHeight: activeStep === i ? 60 : 0, overflow: "hidden", opacity: activeStep === i ? 1 : 0, transition: "max-height 300ms ease, opacity 280ms" }}>{step.b}</div>
-                </div>
-                <div style={{ width: 16, height: 16, borderRadius: "50%", border: `1.5px solid ${activeStep === i ? step.accent : C.tertiary}`, background: activeStep === i ? step.accent : "transparent", flexShrink: 0, marginTop: 4, transition: "all 200ms" }} />
-              </div>
-            ))}
-          </div>
-
-          {/* Role tree */}
-          <div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: "#9CA3AF", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 14 }}>Role hierarchy</div>
-            <h2 style={{ fontSize: 36, fontWeight: 700, lineHeight: "43px", letterSpacing: "-0.8px", color: C.primary, marginBottom: 28 }}>Five tiers.<br />One authority.</h2>
-            <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center" }}>
-              <RoleNode role={ROLES[0]} active={activeRole === ROLES[0].id} onClick={() => setActiveRole(activeRole === ROLES[0].id ? null : ROLES[0].id)} />
-              <div style={{ width: 1, height: 20, background: C.tertiary }} />
-              <div style={{ position: "relative", width: 270 }}>
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: C.tertiary }} />
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  {[ROLES[1], ROLES[2]].map(r => (
-                    <div key={r.id} style={{ display: "flex", flexDirection: "column" as const, alignItems: "center" }}>
-                      <div style={{ width: 1, height: 20, background: C.tertiary }} />
-                      <RoleNode role={r} active={activeRole === r.id} onClick={() => setActiveRole(activeRole === r.id ? null : r.id)} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div style={{ width: 1, height: 20, background: C.tertiary }} />
-              <RoleNode role={ROLES[3]} active={activeRole === ROLES[3].id} onClick={() => setActiveRole(activeRole === ROLES[3].id ? null : ROLES[3].id)} />
-              <div style={{ width: 1, height: 20, background: C.tertiary }} />
-              <RoleNode role={ROLES[4]} active={activeRole === ROLES[4].id} onClick={() => setActiveRole(activeRole === ROLES[4].id ? null : ROLES[4].id)} />
-            </div>
-            <div style={{ marginTop: 18, padding: "12px 16px", background: C.surface, border: `1px solid ${C.tertiary}`, borderRadius: 10, fontSize: 12, color: C.primary, display: "flex", alignItems: "center", minHeight: 44 }}>
-              {activeRoleData
-                ? <><span style={{ width: 7, height: 7, borderRadius: "50%", background: activeRoleData.accent, display: "inline-block", marginRight: 8, flexShrink: 0 }} /><span><strong>{activeRoleData.label}</strong> — {activeRoleData.desc}</span></>
-                : <span style={{ color: "#9CA3AF" }}>Click any role to learn more.</span>}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ══ FEATURES GRID ════════════════════════════════════════════ */}
-      <section id="section-4" style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 32px" }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: "#9CA3AF", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 20 }}>Features</div>
-        <h2 style={{ fontSize: 36, fontWeight: 700, letterSpacing: "-0.8px", color: C.primary, marginBottom: 36, lineHeight: "43px" }}>
-          Everything the university needs.<br />Nothing it doesn&apos;t.
-        </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: C.tertiary, border: `1px solid ${C.tertiary}`, borderRadius: 14, overflow: "hidden" }}>
-          {FEATURES.map(f => (
-            <div key={f.title} style={{ background: C.white, padding: "28px 26px" }}>
-              {/* Accent icon */}
-              <div style={{ width: 36, height: 36, borderRadius: 8, background: f.accent + "12", border: `1px solid ${f.accent}25`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
-                <span style={{ fontSize: 16, color: f.accent }}>{f.icon}</span>
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.primary, marginBottom: 6, letterSpacing: "-0.1px" }}>{f.title}</div>
-              <div style={{ fontSize: 12, lineHeight: "19px", color: "#9CA3AF" }}>{f.body}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ══ CTA SPLIT ════════════════════════════════════════════════ */}
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px 64px", display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 12 }}>
-        <div style={{ background: C.primary, borderRadius: 14, padding: "52px 40px", display: "flex", flexDirection: "column" as const, justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 14 }}>Ready?</div>
-            <h2 style={{ fontSize: 32, fontWeight: 700, lineHeight: "40px", letterSpacing: "-0.6px", color: C.white, marginBottom: 12 }}>Your documents<br />are already waiting.</h2>
-            <p style={{ fontSize: 13, lineHeight: "21px", color: "rgba(255,255,255,0.4)", marginBottom: 28, maxWidth: 340 }}>Create an account, get approved by your department administrator, and start routing documents the right way.</p>
-          </div>
-          <Link href="/register" style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 44, padding: "0 22px", background: C.white, color: C.primary, borderRadius: 9999, fontSize: 13, fontWeight: 700, textDecoration: "none", width: "fit-content" }}>
-            Create your account →
-          </Link>
-        </div>
-        <div style={{ background: C.surface, border: `1px solid ${C.tertiary}`, borderRadius: 14, padding: "52px 40px", display: "flex", flexDirection: "column" as const, justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: "#9CA3AF", letterSpacing: "0.12em", textTransform: "uppercase" as const, marginBottom: 14 }}>Already registered?</div>
-            <h3 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.4px", color: C.primary, marginBottom: 8, lineHeight: "34px" }}>Sign in to<br />your account.</h3>
-            <p style={{ fontSize: 12, color: "#9CA3AF", lineHeight: "20px", marginBottom: 28 }}>Your inbox, outbox, and audit trail are waiting.</p>
-          </div>
-          <Link href="/login" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 44, background: C.primary, color: C.white, borderRadius: 9999, fontSize: 13, fontWeight: 700, textDecoration: "none" }}>
-            Sign in →
-          </Link>
         </div>
       </div>
 
-      {/* ══ FOOTER — flickering grid ══════════════════════════════════ */}
-      <footer style={{ background: C.surface, borderTop: `1px solid ${C.tertiary}`, position: "relative", overflow: "hidden" }}>
-        <style>{`.marquee-track{display:flex;animation:marquee 30s linear infinite;white-space:nowrap;}`}</style>
+      {/* ═══ NAV ═══════════════════════════════════════════════════════════ */}
+      <nav className="flex items-center justify-between px-4 sm:px-8 lg:px-10 py-4 max-w-6xl mx-auto">
+        <DocwakaWordmark size={17} logoSize={52} variant="light" />
+        <div className="hidden sm:flex items-center gap-2">
+          <Link href="/login"    className="text-[13px] font-medium text-secondary px-4 py-2 rounded-full border border-tertiary hover:bg-surface transition-colors no-underline">Sign in</Link>
+          <Link href="/register" className="text-[13px] font-bold text-white px-4 py-2 rounded-full hover:opacity-85 transition-opacity no-underline" style={{ background:"#141414" }}>Get started →</Link>
+        </div>
+        <button onClick={() => setMenuOpen(v=>!v)} className="sm:hidden p-2 text-secondary" aria-label="Menu">
+          <div className="w-5 space-y-1"><div className="h-0.5 bg-current"/><div className="h-0.5 bg-current"/><div className="h-0.5 bg-current"/></div>
+        </button>
+      </nav>
 
-        {/* Flicker grid */}
-        <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: `repeat(${GCOLS},1fr)`, gridTemplateRows: `repeat(${GROWS},1fr)`, zIndex: 0, pointerEvents: "none" }}>
-          {gridCells.map((c, i) => <div key={i} style={{ background: c, transition: "background 300ms ease", opacity: 0.08 }} />)}
+      {menuOpen && (
+        <div className="sm:hidden border-t border-tertiary bg-white px-4 py-3 flex flex-col gap-2">
+          <Link href="/login"    onClick={()=>setMenuOpen(false)} className="flex items-center justify-center h-11 rounded-full border border-tertiary text-[14px] font-medium text-secondary no-underline">Sign in</Link>
+          <Link href="/register" onClick={()=>setMenuOpen(false)} className="flex items-center justify-center h-11 rounded-full text-[14px] font-bold text-white no-underline" style={{ background:"#141414" }}>Get started →</Link>
+        </div>
+      )}
+
+      {/* ═══ HERO ══════════════════════════════════════════════════════════ */}
+      <section className="mx-3 sm:mx-6 lg:mx-10 mb-4 rounded-2xl overflow-hidden" style={{ background:"#141414", minHeight:"62vh" }}>
+        <div style={{ backgroundImage:"linear-gradient(rgba(255,255,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.04) 1px,transparent 1px)", backgroundSize:"40px 40px" }} className="absolute inset-0 pointer-events-none" />
+        <div className="relative flex flex-col lg:flex-row" style={{ minHeight:"62vh" }}>
+
+          {/* Sidebar — desktop only */}
+          <aside className="hidden lg:flex flex-col w-[210px] shrink-0 border-r border-white/10 p-5 gap-2.5">
+            <DocwakaWordmark size={15} logoSize={48} variant="dark" />
+            <div className="mt-3 flex flex-col gap-2">
+              {[{n:"01",l:"Document Routing"},{n:"02",l:"Role Hierarchy"},{n:"03",l:"Audit & Tracking"},{n:"04",l:"Get Started"}].map((item,i) => (
+                <div key={item.n} style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"10px 12px", borderRadius:8, background:`rgba(255,255,255,${0.03 + i*0.02})`, border:"1px solid rgba(255,255,255,0.06)" }}>
+                  <div>
+                    <div style={{ fontSize:10, fontWeight:700, color:"rgba(255,255,255,0.35)", marginBottom:3 }}>{item.n}</div>
+                    <div style={{ fontSize:12, fontWeight:700, color:"#fff" }}>{item.l}</div>
+                  </div>
+                  <span style={{ fontSize:12, color:"rgba(255,255,255,0.25)" }}>↗</span>
+                </div>
+              ))}
+            </div>
+            <Link href="/register" className="mt-auto flex items-center justify-center h-10 rounded-full text-[13px] font-bold text-on-surface hover:opacity-90 no-underline" style={{ background:"#fff" }}>Get started ↗</Link>
+            <Link href="/login"    className="flex items-center justify-center h-9 rounded-full text-[12px] font-medium text-secondary no-underline" style={{ border:"1px solid rgba(255,255,255,0.12)" }}>Sign in</Link>
+          </aside>
+
+          {/* Hero body */}
+          <div className="flex-1 flex flex-col justify-end p-5 sm:p-8 lg:p-10">
+            {/* Slide dots */}
+            <div className="flex gap-1.5 mb-5">
+              {SLIDES.map((_,i) => (
+                <button key={i} onClick={()=>setSlide(i)} style={{ width:i===slide?24:6, height:6, borderRadius:9999, background:i===slide?"#fff":"rgba(255,255,255,0.25)", border:"none", cursor:"pointer", transition:"all 300ms", padding:0 }} />
+              ))}
+            </div>
+
+            <h1 className="text-white font-black mb-4 whitespace-pre-line" style={{ fontSize:"clamp(38px,7vw,80px)", lineHeight:1.0, letterSpacing:"-2px", textShadow:"0 2px 32px rgba(0,0,0,0.4)" }}>
+              {curSlide.h}
+            </h1>
+            <p className="text-white/60 mb-7 text-[14px] sm:text-[16px] leading-6" style={{ maxWidth:460 }}>
+              {curSlide.s}
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-2.5 mb-7">
+              <Link href="/register" className="flex items-center justify-center gap-2 h-12 px-6 rounded-full text-[14px] sm:text-[15px] font-bold text-on-surface hover:opacity-90 no-underline" style={{ background:"#fff" }}>
+                Start routing documents ↗
+              </Link>
+              <Link href="/login" className="flex items-center justify-center gap-2 h-12 px-5 rounded-full text-[14px] font-semibold text-white no-underline" style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.18)" }}>
+                Sign in
+              </Link>
+            </div>
+
+            {/* State pills */}
+            <div className="flex flex-wrap gap-2">
+              {STATES.map(s => (
+                <div key={s.l} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full" style={{ background:s.bg }}>
+                  <span style={{ width:6, height:6, borderRadius:"50%", background:s.dc, display:"inline-block" }} />
+                  <span style={{ fontSize:11, fontWeight:700, color:s.tc }}>{s.l}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ SCHOOLS GRID ══════════════════════════════════════════════════ */}
+      <section className="px-3 sm:px-6 lg:px-10 pb-4 max-w-6xl mx-auto">
+        {/* Section header */}
+        <div className="flex items-end justify-between mb-4 flex-wrap gap-2">
+          <div>
+            <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-[0.12em] mb-1">Coverage</p>
+            <h2 className="text-[26px] sm:text-[32px] font-bold tracking-tight leading-tight">
+              59 departments.<br />
+              <span className="text-[#9CA3AF]">11 schools. One platform.</span>
+            </h2>
+          </div>
+          <div className="text-right hidden sm:block">
+            <p className="text-[13px] text-[#9CA3AF] leading-5">Every department, faculty, and<br />administrative unit at FUTO.</p>
+          </div>
         </div>
 
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 1200, margin: "0 auto", padding: "64px 32px 36px" }}>
-          {/* Big wordmark */}
-          <div style={{ fontSize: "clamp(56px,9vw,128px)", fontWeight: 800, color: C.primary, letterSpacing: "-5px", lineHeight: 0.9, marginBottom: 48, opacity: 0.85 }}>
+        {/* School cards — 2-col mobile, 4-col lg */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-3">
+          {SCHOOLS.map(s => (
+            <div key={s.abbr} className="rounded-xl p-4 border border-[#E5E7EB] flex flex-col gap-2 hover:-translate-y-0.5 transition-transform" style={{ background:s.color }}>
+              <div className="flex items-center justify-between">
+                <span style={{ fontSize:10, fontWeight:800, color:s.tc, letterSpacing:"0.08em" }}>{s.abbr}</span>
+                <span style={{ fontSize:18, fontWeight:800, color:s.tc }}>{s.depts}</span>
+              </div>
+              <div style={{ fontSize:11, fontWeight:600, color:s.tc, lineHeight:"16px", opacity:0.8 }}>{s.name}</div>
+              <div style={{ fontSize:10, color:s.tc, opacity:0.5 }}>{s.depts} dept{s.depts !== 1 ? "s" : ""}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Three-col feature row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          {/* Dark CTA */}
+          <div className="rounded-xl p-6 sm:p-7 flex flex-col justify-between sm:col-span-1" style={{ background:"#141414", minHeight:180 }}>
+            <div>
+              <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.1em] mb-3">The platform</p>
+              <h3 className="text-[20px] sm:text-[22px] font-bold text-white leading-tight mb-2">A shared way<br />of working.</h3>
+              <p className="text-[12px] text-white/40 leading-5">docwaka. connects every department through a single, transparent workflow.</p>
+            </div>
+            <Link href="/register" className="mt-5 inline-flex items-center gap-2 h-9 px-4 rounded-full text-[12px] font-bold text-on-surface w-fit no-underline" style={{ background:"#fff" }}>
+              Join now ↗
+            </Link>
+          </div>
+
+          {/* States card */}
+          <div className="rounded-xl border border-[#E5E7EB] p-5 sm:col-span-2" style={{ background:"#F7F7F7" }}>
+            <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-[0.1em] mb-3">Document lifecycle</p>
+            <div className="grid grid-cols-2 gap-2">
+              {[{ l:"Draft", bg:"#F9FAFB", tc:"#6B7280", dc:"#D1D5DB", note:"Not yet dispatched" }, ...STATES].map(st => (
+                <div key={st.l} className="flex items-center justify-between px-3 py-2 rounded-lg" style={{ background:st.bg }}>
+                  <div className="flex items-center gap-2">
+                    <span style={{ width:6, height:6, borderRadius:"50%", background:st.dc, display:"inline-block", flexShrink:0 }} />
+                    <span style={{ fontSize:12, fontWeight:700, color:st.tc }}>{st.l}</span>
+                  </div>
+                  <span style={{ fontSize:10, color:"#9CA3AF" }} className="hidden sm:block">{st.note}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ HOW IT WORKS ══════════════════════════════════════════════════ */}
+      <section style={{ background:"#F7F7F7", borderTop:"1px solid #E5E7EB", borderBottom:"1px solid #E5E7EB" }}>
+        <div className="px-4 sm:px-6 lg:px-10 py-10 sm:py-14 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+
+            {/* Steps */}
+            <div>
+              <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-[0.12em] mb-3">Process</p>
+              <h2 className="text-[26px] sm:text-[32px] font-bold tracking-tight leading-tight text-[#141414] mb-6">
+                Four steps.<br />Zero lost documents.
+              </h2>
+              {STEPS.map((step, i) => (
+                <div key={step.n} onClick={() => setActiveStep(i)} className="flex gap-4 py-4 border-b border-[#EBEBEB] last:border-none cursor-pointer group">
+                  <div style={{ fontSize:10, fontWeight:800, color: activeStep===i ? "#141414" : "#D1D5DB", minWidth:24, marginTop:3, transition:"color 200ms" }}>{step.n}</div>
+                  <div className="flex-1">
+                    <div style={{ fontSize:14, fontWeight:700, color:"#141414", marginBottom:3 }}>{step.t}</div>
+                    <div style={{ fontSize:12, lineHeight:"20px", color:"#9CA3AF", maxHeight: activeStep===i ? 80 : 0, overflow:"hidden", opacity: activeStep===i ? 1 : 0, transition:"max-height 300ms ease, opacity 280ms ease" }}>{step.b}</div>
+                  </div>
+                  <div style={{ width:16, height:16, borderRadius:"50%", border:`1.5px solid ${activeStep===i ? "#141414" : "#E5E7EB"}`, background: activeStep===i ? "#141414" : "transparent", flexShrink:0, marginTop:3, transition:"all 200ms" }} />
+                </div>
+              ))}
+            </div>
+
+            {/* Role tree */}
+            <div>
+              <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-[0.12em] mb-3">Role hierarchy</p>
+              <h2 className="text-[26px] sm:text-[32px] font-bold tracking-tight leading-tight text-[#141414] mb-6">
+                Five tiers.<br />One chain of authority.
+              </h2>
+              <div className="flex flex-col items-center">
+                <RoleNode role={ROLES[0]} active={activeRole===ROLES[0].id} onClick={() => setActiveRole(activeRole===ROLES[0].id ? null : ROLES[0].id)} />
+                <VLine />
+                <div className="relative w-full max-w-[280px]">
+                  <div className="absolute top-0 left-0 right-0 h-px bg-[#E5E7EB]" />
+                  <div className="flex justify-between">
+                    {[ROLES[1],ROLES[2]].map(r => (
+                      <div key={r.id} className="flex flex-col items-center">
+                        <VLine h={20} />
+                        <RoleNode role={r} active={activeRole===r.id} onClick={() => setActiveRole(activeRole===r.id ? null : r.id)} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <VLine />
+                <RoleNode role={ROLES[3]} active={activeRole===ROLES[3].id} onClick={() => setActiveRole(activeRole===ROLES[3].id ? null : ROLES[3].id)} />
+                <VLine />
+                <RoleNode role={ROLES[4]} active={activeRole===ROLES[4].id} onClick={() => setActiveRole(activeRole===ROLES[4].id ? null : ROLES[4].id)} />
+              </div>
+              <div className="mt-4 px-4 py-3 bg-white border border-[#E5E7EB] rounded-xl text-[12px] sm:text-[13px] min-h-[48px] flex items-center">
+                {activeRoleData
+                  ? <span><strong>{activeRoleData.l}</strong> — {activeRoleData.d}</span>
+                  : <span style={{ color:"#9CA3AF" }}>Click any role to learn more.</span>}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ PILLARS ═══════════════════════════════════════════════════════ */}
+      <section className="px-3 sm:px-6 lg:px-10 py-10 sm:py-14 max-w-6xl mx-auto">
+        <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
+          <div>
+            <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-[0.12em] mb-1">Our approach</p>
+            <h2 className="text-[26px] sm:text-[32px] font-bold tracking-tight leading-tight">Built for the institution.<br /><span className="text-[#9CA3AF]">Designed for the people.</span></h2>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-2.5">
+          {[
+            { bg:"#141414", fg:"#fff",    accent:"rgba(255,255,255,0.5)", icon:"◎", n:"01", t:"For People",  b:"Built for everyone at FUTO — from the Registrar to the newest staff member. No training required." },
+            { bg:"#F7F7F7", fg:"#141414", accent:"#707070",               icon:"→", n:"02", t:"By Design",   b:"Every flow is deliberate. Document states, approval chains, and events follow strict, predictable rules." },
+            { bg:"#E5E7EB", fg:"#141414", accent:"#707070",               icon:"♡", n:"03", t:"With Care",   b:"Nothing gets lost. Nothing goes unrecorded. Every document tracked from dispatch to confirmed delivery." },
+          ].map(p => (
+            <div key={p.t} className="rounded-xl p-6 sm:p-7 flex flex-col justify-between" style={{ background:p.bg, minHeight:220, border: p.bg !== "#141414" ? "1px solid #D1D5DB" : "none" }}>
+              <div className="flex items-center justify-between mb-auto">
+                <span style={{ fontSize:10, fontWeight:800, color: p.bg === "#141414" ? "rgba(255,255,255,0.3)" : "#9CA3AF", letterSpacing:"0.1em" }}>{p.n}</span>
+                <span style={{ fontSize:22, color:p.fg }}>{p.icon}</span>
+              </div>
+              <div className="mt-6">
+                <div style={{ fontSize:20, fontWeight:800, color:p.fg, letterSpacing:"-0.4px", marginBottom:8 }}>{p.t}</div>
+                <div style={{ fontSize:12, lineHeight:"20px", color:p.accent }}>{p.b}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Full-width CTA band */}
+        <Link href="/register" className="flex items-center justify-between px-5 sm:px-7 py-4 sm:py-5 rounded-xl text-white hover:opacity-90 transition-opacity no-underline" style={{ background:"#141414" }}>
+          <span className="text-[14px] sm:text-[16px] font-bold leading-tight">Ready to get started?<span className="hidden sm:inline"> Create your account now.</span></span>
+          <span style={{ fontSize:20, marginLeft:16 }}>↗</span>
+        </Link>
+      </section>
+
+      {/* ═══ MARQUEE STATS BAND ════════════════════════════════════════════ */}
+      <div style={{ borderTop:"1px solid #E5E7EB", borderBottom:"1px solid #E5E7EB", overflow:"hidden" }}>
+        <div className="flex">
+          {[
+            { n:"73",   l:"Depts & admin units"  },
+            { n:"11",   l:"Academic schools"      },
+            { n:"5",    l:"Role tiers"            },
+            { n:"5",    l:"Document states"       },
+            { n:"100%", l:"Events traceable"      },
+            { n:"0",    l:"Documents ever lost"   },
+          ].map((s,i) => (
+            <div key={i} className="flex-1 border-r border-[#E5E7EB] last:border-none py-6 sm:py-8 text-center px-2" style={{ minWidth:0 }}>
+              <div style={{ fontSize:"clamp(24px,4vw,44px)", fontWeight:800, letterSpacing:"-1px", color:"#141414", lineHeight:1 }}>{s.n}</div>
+              <div style={{ fontSize:"clamp(9px,1.2vw,12px)", color:"#9CA3AF", marginTop:6, fontWeight:500 }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ═══ CTA SPLIT ═════════════════════════════════════════════════════ */}
+      <section className="px-3 sm:px-6 lg:px-10 py-10 sm:py-14 max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div className="rounded-xl p-6 sm:p-8 flex flex-col justify-between" style={{ background:"#141414", minHeight:220 }}>
+          <div>
+            <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.1em] mb-4">Ready?</p>
+            <h2 className="text-[22px] sm:text-[26px] font-bold text-white leading-tight mb-3">Your documents<br />are already waiting.</h2>
+            <p className="text-[12px] text-white/40 leading-5">Create an account, get approved by your administrator, and start routing the right way.</p>
+          </div>
+          <Link href="/register" className="mt-6 inline-flex items-center justify-center h-11 px-5 rounded-full text-[13px] sm:text-[14px] font-bold text-on-surface w-fit hover:opacity-90 no-underline" style={{ background:"#fff" }}>
+            Create your account →
+          </Link>
+        </div>
+        <div className="rounded-xl p-6 sm:p-8 flex flex-col justify-between border border-[#E5E7EB]" style={{ background:"#F7F7F7", minHeight:220 }}>
+          <div>
+            <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-[0.1em] mb-4">Returning?</p>
+            <h2 className="text-[22px] sm:text-[26px] font-bold text-[#141414] leading-tight mb-3">Sign in to<br />your account.</h2>
+            <p className="text-[12px] text-[#9CA3AF] leading-5">Your inbox, outbox, and audit trail are waiting.</p>
+          </div>
+          <Link href="/login" className="mt-6 flex items-center justify-center h-11 rounded-full text-[13px] sm:text-[14px] font-bold text-white hover:opacity-90 no-underline" style={{ background:"#141414" }}>
+            Sign in →
+          </Link>
+        </div>
+      </section>
+
+      {/* ═══ FOOTER + FLICKER GRID ═════════════════════════════════════════ */}
+      <footer style={{ background:"#F7F7F7", borderTop:"1px solid #E5E7EB", position:"relative", overflow:"hidden" }}>
+        {/* Flicker grid */}
+        <div style={{ position:"absolute", inset:0, display:"grid", gridTemplateColumns:`repeat(${GCOLS},1fr)`, gridTemplateRows:`repeat(${GROWS},1fr)`, zIndex:0, pointerEvents:"none" }}>
+          {grid.map((c,i) => <div key={i} style={{ background:c, transition:"background 280ms ease", opacity:0.1 }} />)}
+        </div>
+
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 pt-10 sm:pt-14 pb-6">
+          {/* Giant wordmark */}
+          <div className="font-black text-[#141414] mb-8 sm:mb-12" style={{ fontSize:"clamp(48px,11vw,130px)", letterSpacing:"-4px", lineHeight:0.9, opacity:0.9 }}>
             docwaka.
           </div>
-
-          {/* Accent accent row under wordmark */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 40 }}>
-            {[C.blue, C.amber, C.green, C.purple, C.red].map(c => (
-              <div key={c} style={{ height: 3, flex: 1, background: c, borderRadius: 9999, opacity: 0.5 }} />
-            ))}
-          </div>
-
-          {/* Footer meta */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14, paddingTop: 20, borderTop: `1px solid ${C.tertiary}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, color: C.primary }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.jpg" alt="DocWaka" width={18} height={18} />DocWaka
-            </div>
-            <p style={{ fontSize: 11, color: "#9CA3AF" }}>© {new Date().getFullYear()} Federal University of Technology Owerri — Document Workflow & Tracking System</p>
-            <div style={{ display: "flex", gap: 14 }}>
-              <Link href="/login"    style={{ fontSize: 11, color: "#9CA3AF", textDecoration: "none" }}>Sign in</Link>
-              <Link href="/register" style={{ fontSize: 11, color: "#9CA3AF", textDecoration: "none" }}>Register</Link>
+          {/* Sub-footer */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-5 border-t border-[#E5E7EB]">
+            <DocwakaWordmark size={13} logoSize={40} variant="light" />
+            <p style={{ fontSize:11, color:"#9CA3AF" }}>© {new Date().getFullYear()} Federal University of Technology Owerri</p>
+            <div className="flex gap-4">
+              <Link href="/login"    style={{ fontSize:11, color:"#9CA3AF", textDecoration:"none" }}>Sign in</Link>
+              <Link href="/register" style={{ fontSize:11, color:"#9CA3AF", textDecoration:"none" }}>Register</Link>
             </div>
           </div>
         </div>
@@ -431,25 +419,17 @@ export default function LandingPage() {
   );
 }
 
-// ── RoleNode ──────────────────────────────────────────────────────────────────
+// ── Sub-components ─────────────────────────────────────────────────────────────
 function RoleNode({ role, active, onClick }: { role: typeof ROLES[0]; active: boolean; onClick: () => void }) {
   return (
-    <button onClick={onClick} style={{
-      position: "relative", background: active ? role.accent : C.white,
-      border: `1px solid ${active ? role.accent : C.tertiary}`,
-      borderRadius: 10, padding: "10px 18px", textAlign: "center",
-      minWidth: 106, cursor: "pointer",
-      transform: active ? "translateY(-2px)" : "none",
-      boxShadow: active ? `0 4px 16px ${role.accent}30` : "none",
-      transition: "all 150ms", fontFamily: "inherit",
-    }}>
-      {role.badge && (
-        <span style={{ position: "absolute", top: -8, right: -8, background: role.accent, color: C.white, fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 9999 }}>
-          {role.badge}
-        </span>
-      )}
-      <div style={{ fontSize: 12, fontWeight: 700, color: active ? C.white : C.primary, letterSpacing: "-0.2px" }}>{role.label}</div>
-      <div style={{ fontSize: 10, color: active ? "rgba(255,255,255,0.6)" : "#9CA3AF", marginTop: 2, whiteSpace: "nowrap" as const }}>{role.sub}</div>
+    <button onClick={onClick} style={{ position:"relative", background: active ? "#141414" : "#fff", border:`1px solid ${active ? "#141414" : "#E5E7EB"}`, borderRadius:10, padding:"10px 18px", textAlign:"center", minWidth:108, cursor:"pointer", transform: active ? "translateY(-2px)" : "none", boxShadow: active ? "0 4px 16px rgba(20,20,20,0.14)" : "none", transition:"all 150ms", fontFamily:"inherit" }}>
+      {role.b && <span style={{ position:"absolute", top:-8, right:-8, background:"#141414", color:"#fff", fontSize:9, fontWeight:700, padding:"2px 7px", borderRadius:9999 }}>{role.b}</span>}
+      <div style={{ fontSize:12, fontWeight:700, color: active ? "#fff" : "#141414" }}>{role.l}</div>
+      <div style={{ fontSize:10, color: active ? "rgba(255,255,255,0.5)" : "#9CA3AF", marginTop:2, whiteSpace:"nowrap" }}>{role.s}</div>
     </button>
   );
+}
+
+function VLine({ h = 28 }: { h?: number }) {
+  return <div style={{ width:1, height:h, background:"#E5E7EB" }} />;
 }

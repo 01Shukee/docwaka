@@ -1,131 +1,162 @@
 // prisma/seed.ts
-
 import { PrismaClient, Role, AccountStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient({
-  datasources: { db: { url: process.env.DATABASE_URL } },
-});
+const prisma = new PrismaClient();
 
+// ── Official FUTO Academic Structure (2024) ───────────────────────────────────
+// Source: FUTO official website — 11 schools + SPGS + GST + Admin Units
 const DEPARTMENTS: string[] = [
-  "School of Engineering and Engineering Technology",
-  "Department of Agricultural Engineering",
-  "Department of Chemical Engineering",
-  "Department of Civil Engineering",
-  "Department of Computer Science",
-  "Department of Electrical Engineering",
-  "Department of Mechanical Engineering",
-  "Department of Polymer and Textile Engineering",
-  "Department of Biology",
-  "Department of Chemistry",
-  "Department of Geology",
-  "Department of Mathematics",
-  "Department of Physics",
-  "Department of Statistics",
-  "Department of Animal Science",
-  "Department of Crop Science and Technology",
-  "Department of Fisheries and Aquaculture",
-  "Department of Food Science and Technology",
-  "Department of Forestry and Wood Technology",
-  "Department of Soil Science and Technology",
-  "Department of Accountancy",
-  "Department of Banking and Finance",
-  "Department of Business Administration",
-  "Department of Marketing",
-  "Department of Public Administration",
-  "Department of Architecture",
-  "Department of Estate Management",
-  "Department of Quantity Surveying",
-  "Department of Urban and Regional Planning",
-  "Department of Biomedical Technology",
-  "Department of Environmental Health",
-  "Department of Medical Laboratory Science",
-  "Department of Nutrition and Dietetics",
-  "Department of Optometry",
-  "Department of Science Laboratory Technology",
+
+  // 1. School of Agriculture and Agricultural Technology (SAAT) — 8 depts
+  "SAAT – Agribusiness",
+  "SAAT – Agricultural Economics",
+  "SAAT – Agricultural Extension",
+  "SAAT – Animal Science and Technology",
+  "SAAT – Crop Science and Technology",
+  "SAAT – Fisheries and Aquaculture Technology",
+  "SAAT – Forestry and Wildlife Technology",
+  "SAAT – Soil Science and Technology",
+
+  // 2. School of Basic Medical Sciences (SBMS) — 2 depts
+  "SBMS – Human Anatomy",
+  "SBMS – Human Physiology",
+
+  // 3. School of Biological Sciences (SOBS) — 5 depts
+  "SOBS – Biochemistry",
+  "SOBS – Biology",
+  "SOBS – Biotechnology",
+  "SOBS – Forensic Science",
+  "SOBS – Microbiology",
+
+  // 4. School of Engineering and Engineering Technology (SEET) — 9 depts
+  "SEET – Agricultural and Bioresources Engineering",
+  "SEET – Biomedical Engineering",
+  "SEET – Chemical Engineering",
+  "SEET – Civil Engineering",
+  "SEET – Food Science and Technology",
+  "SEET – Materials and Metallurgical Engineering",
+  "SEET – Mechanical Engineering",
+  "SEET – Petroleum Engineering",
+  "SEET – Polymer and Textile Engineering",
+
+  // 5. School of Electrical Systems and Engineering Technology (SESET) — 6 depts
+  "SESET – Computer Engineering",
+  "SESET – Electrical and Electronic Engineering",
+  "SESET – Electrical (Power Systems) Engineering",
+  "SESET – Electronics Engineering",
+  "SESET – Mechatronics Engineering",
+  "SESET – Telecommunications Engineering",
+
+  // 6. School of Environmental Sciences (SOES) — 7 depts
+  "SOES – Architecture",
+  "SOES – Building Technology",
+  "SOES – Environmental Management",
+  "SOES – Environmental Management and Evaluation",
+  "SOES – Quantity Surveying",
+  "SOES – Surveying and Geoinformatics",
+  "SOES – Urban and Regional Planning",
+
+  // 7. School of Health Technology (SOHT) — 5 depts
+  "SOHT – Dental Technology",
+  "SOHT – Environmental Health Science",
+  "SOHT – Optometry",
+  "SOHT – Prosthetics and Orthotics",
+  "SOHT – Public Health Technology",
+
+  // 8. School of Information and Communication Technology (SICT) — 4 depts
+  "SICT – Computer Science",
+  "SICT – Cyber Security",
+  "SICT – Information Technology",
+  "SICT – Software Engineering",
+
+  // 9. School of Logistics and Innovation Technology (SLIT) — 5 depts
+  "SLIT – Entrepreneurship and Innovation",
+  "SLIT – Logistics and Transport Technology",
+  "SLIT – Maritime Technology and Logistics",
+  "SLIT – Project Management Technology",
+  "SLIT – Supply Chain Management",
+
+  // 10. School of Physical Sciences (SOPS) — 6 depts
+  "SOPS – Chemistry",
+  "SOPS – Geology",
+  "SOPS – Mathematics",
+  "SOPS – Physics",
+  "SOPS – Science Laboratory Technology",
+  "SOPS – Statistics",
+
+  // 11. School of Postgraduate Studies (SPGS)
+  "School of Postgraduate Studies (SPGS)",
+
+  // Directorate of General Studies
+  "Directorate of General Studies (GST)",
+
+  // Administrative Units
   "Registry",
   "Bursary",
-  "Library",
-  "Student Affairs",
-  "Academic Planning",
-  "ICT Unit",
-  "Works and Services",
+  "University Library",
+  "Student Affairs Division",
+  "Academic Planning Unit",
+  "ICT Directorate",
+  "Works and Physical Planning",
+  "Legal Unit",
+  "Directorate of Research, Innovation and Commercialisation",
+  "University Health Services",
+  "Sports Council",
+  "Security Unit",
+  "Vice-Chancellor's Office",
+  "Council Secretariat",
 ];
 
 async function main() {
   console.log("🌱  Seeding DocWaka database...\n");
-
-  // ── 1. Upsert departments ONE AT A TIME to avoid connection pool exhaustion
-  console.log(`📁  Seeding ${DEPARTMENTS.length} departments...`);
+  console.log(`📁  Seeding ${DEPARTMENTS.length} departments/units...`);
 
   const departmentRecords = [];
   for (const name of DEPARTMENTS) {
     const dept = await prisma.department.upsert({
-      where:  { name },
-      update: {},
-      create: { name },
+      where: { name }, update: {}, create: { name },
     });
     departmentRecords.push(dept);
     process.stdout.write(".");
   }
-  console.log(`\n    ✓ ${departmentRecords.length} departments ready.\n`);
+  console.log(`\n    ✓ ${departmentRecords.length} entries ready.\n`);
 
-  // ── 2. Upsert SYS_ADMIN ─────────────────────────────────────────────────
-  const adminDept = departmentRecords.find((d) => d.name === "Registry");
-  if (!adminDept) throw new Error("Registry department not found.");
+  // ── SYS_ADMIN ─────────────────────────────────────────────────────────────
+  const adminDept = departmentRecords.find(d => d.name === "Registry");
+  if (!adminDept) throw new Error("Registry not found.");
 
   const ADMIN_EMAIL    = "admin@docwaka.com";
   const ADMIN_PASSWORD = "Admin@1234";
-
-  const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 10);
-
-  // Self-verify before writing
-  const selfCheck = await bcrypt.compare(ADMIN_PASSWORD, hashedPassword);
+  const hash     = await bcrypt.hash(ADMIN_PASSWORD, 10);
+  const selfCheck = await bcrypt.compare(ADMIN_PASSWORD, hash);
   if (!selfCheck) throw new Error("bcrypt self-check failed.");
-  console.log("🔐  bcrypt self-check passed.");
 
   await prisma.user.upsert({
     where:  { email: ADMIN_EMAIL },
-    update: {
-      password: hashedPassword,
-      status:   AccountStatus.APPROVED,
-      role:     Role.SYS_ADMIN,
-    },
-    create: {
-      name:         "System Administrator",
-      email:        ADMIN_EMAIL,
-      password:     hashedPassword,
-      role:         Role.SYS_ADMIN,
-      status:       AccountStatus.APPROVED,
-      departmentId: adminDept.id,
-    },
+    update: { password: hash, status: AccountStatus.APPROVED, role: Role.SYS_ADMIN },
+    create: { name: "System Administrator", email: ADMIN_EMAIL, password: hash, role: Role.SYS_ADMIN, status: AccountStatus.APPROVED, departmentId: adminDept.id },
   });
 
-  // ── 3. Verify hash round-trip from DB ────────────────────────────────────
-  const stored = await prisma.user.findUnique({
-    where:  { email: ADMIN_EMAIL },
-    select: { password: true, status: true },
-  });
+  const stored = await prisma.user.findUnique({ where: { email: ADMIN_EMAIL }, select: { password: true, status: true } });
   if (!stored) throw new Error("Admin not found after upsert.");
 
   const dbCheck = await bcrypt.compare(ADMIN_PASSWORD, stored.password);
+  console.log(`👤  SYS_ADMIN:`);
+  console.log(`    Email:    ${ADMIN_EMAIL}`);
+  console.log(`    Password: ${ADMIN_PASSWORD}`);
+  console.log(`    DB hash:  ${dbCheck ? "✅ VALID" : "❌ INVALID"}\n`);
+  if (!dbCheck) throw new Error("Hash mismatch — login will fail.");
 
-  console.log(`\n👤  SYS_ADMIN account:`);
-  console.log(`    Email:      ${ADMIN_EMAIL}`);
-  console.log(`    Password:   ${ADMIN_PASSWORD}`);
-  console.log(`    Status:     ${stored.status}`);
-  console.log(`    Hash valid: ${dbCheck ? "✅ YES" : "❌ NO"}\n`);
-
-  if (!dbCheck) throw new Error("Stored hash mismatch — login will fail.");
-
-  console.log("✅  Done. Login with admin@docwaka.com / Admin@1234");
+  // Summary
+  const academic = DEPARTMENTS.filter(d => d.includes("–")).length;
+  const admin    = DEPARTMENTS.filter(d => !d.includes("–") && !d.includes("SPGS") && !d.includes("GST")).length;
+  console.log(`✅  Done.`);
+  console.log(`    ${academic} academic departments across 11 schools`);
+  console.log(`    ${admin} administrative units`);
+  console.log(`    ${departmentRecords.length} total entries`);
 }
 
 main()
-  .catch((e) => {
-    console.error("\n❌  Seed failed:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .catch(e => { console.error("❌ Seed failed:", e); process.exit(1); })
+  .finally(async () => { await prisma.$disconnect(); });

@@ -1,7 +1,6 @@
 // src/components/layout/Sidebar.tsx
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import {
@@ -10,6 +9,7 @@ import {
   IconLogout, IconX,
 } from "@tabler/icons-react";
 import SidebarLink from "./SidebarLink";
+import { DocwakaWordmark } from "./Logo";
 import { ROLE_LABELS } from "@/types/user";
 import type { Role } from "@/types/user";
 
@@ -59,24 +59,10 @@ export default function Sidebar({
         "lg:translate-x-0",
       ].join(" ")}>
 
-        {/* ── Logo ─────────────────────────────────────────────────── */}
+        {/* ── Logo ─────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-tertiary shrink-0">
-          <Link href="/dashboard" className="flex items-center gap-2.5" onClick={onClose}>
-            {/* Stickman logo */}
-            <div className="w-8 h-8 rounded-md overflow-hidden shrink-0 flex items-center justify-center bg-white border border-tertiary">
-              <Image
-                src="/logo.jpg"
-                alt="docwaka logo"
-                width={28}
-                height={28}
-                className="object-contain"
-                priority
-              />
-            </div>
-            {/* Wordmark */}
-            <span className="text-[17px] font-black leading-none text-on-surface tracking-tight" style={{ letterSpacing: "-0.5px" }}>
-              docwaka<span className="text-[#3B82F6]">.</span>
-            </span>
+          <Link href="/dashboard" onClick={onClose}>
+            <DocwakaWordmark size={16} logoSize={36} variant="light" />
           </Link>
           <button
             onClick={onClose}
@@ -87,14 +73,12 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* ── Nav ──────────────────────────────────────────────────── */}
+        {/* ── Nav ──────────────────────────────────────────────── */}
         <nav className="flex-1 px-3 py-4 flex flex-col gap-0.5" aria-label="Main navigation">
           <SidebarLink href="/dashboard"     label="Dashboard"    icon={IconLayoutDashboard} exact onClick={onClose} />
           <SidebarLink href="/documents"     label="Documents"    icon={IconInbox}           badge={inboxCount} onClick={onClose} />
           <SidebarLink href="/documents/new" label="New Document" icon={IconFilePlus}        exact onClick={onClose} />
-
           {(showAudit || showAdmin) && <div className="my-2 border-t border-tertiary" />}
-
           {showAudit && (
             <SidebarLink href="/audit" label="Audit Log" icon={IconClipboardList}
               onClick={onClose} accentClass="hover:text-[#4338CA]" />
@@ -105,7 +89,7 @@ export default function Sidebar({
           )}
         </nav>
 
-        {/* ── User footer ───────────────────────────────────────────── */}
+        {/* ── User footer ───────────────────────────────────────── */}
         <div className="shrink-0 border-t border-tertiary px-3 py-3">
           <Link href="/profile" onClick={onClose}
             className="flex items-center gap-2.5 px-2 py-2 rounded-md hover:bg-surface transition-colors group">
@@ -120,7 +104,7 @@ export default function Sidebar({
           </Link>
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="w-full flex items-center gap-2.5 px-2 py-2 mt-0.5 rounded-md text-[13px] font-medium text-secondary hover:bg-surface hover:text-on-surface transition-colors focus-visible:outline-none"
+            className="w-full flex items-center gap-2.5 px-2 py-2 mt-0.5 rounded-md text-[13px] font-medium text-secondary hover:bg-surface hover:text-on-surface transition-colors"
           >
             <IconLogout size={14} stroke={1.5} className="shrink-0" />
             Sign out
