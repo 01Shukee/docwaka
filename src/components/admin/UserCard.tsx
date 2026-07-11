@@ -1,55 +1,41 @@
 // src/components/admin/UserCard.tsx
-
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, XCircle, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
-import { Card } from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
+import {
+  IconChevronDown, IconChevronUp, IconCircleCheck,
+  IconCircleX, IconRefresh, IconUser,
+} from "@tabler/icons-react";
 import { AccountStatusBadge } from "@/components/ui/StatusBadge";
-import { ROLE_LABELS } from "@/types/user";
+import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { ROLE_LABELS } from "@/types/user";
 import type { UserSummary } from "@/types/user";
 
 interface UserCardProps {
-  user:       UserSummary;
-  onUpdated:  (updated: UserSummary) => void;
+  user:      UserSummary;
+  onUpdated: (updated: UserSummary) => void;
 }
 
-/**
- * FSD §4.10 — Admin user management card.
- * Shows name, email, role, department, status.
- * Action buttons vary by current status:
- *   PENDING  → Approve | Reject
- *   APPROVED → Revoke
- *   REJECTED → Approve
- *
- * DESIGN.md: card token, white surface, pill buttons.
- * Destructive (Reject/Revoke) uses danger variant — restrained, not dominant.
- */
 export default function UserCard({ user, onUpdated }: UserCardProps) {
   const { success, error: toastError } = useToast();
-  const [loading, setLoading]           = useState<string | null>(null);
-  const [expanded, setExpanded]         = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [loading,  setLoading]  = useState<"APPROVE"|"REJECT"|"REVOKE"|null>(null);
 
-  const handleAction = async (action: "APPROVE" | "REJECT" | "REVOKE") => {
+  const initials = user.name.split(" ").slice(0,2).map(n=>n[0]).join("").toUpperCase();
+
+  const handleAction = async (action: "APPROVE"|"REJECT"|"REVOKE") => {
     setLoading(action);
     try {
-      const res = await fetch("/api/admin/users", {
+      const res  = await fetch("/api/admin/users", {
         method:  "PATCH",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ userId: user.id, action }),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Action failed.");
-      onUpdated(json.user as UserSummary);
-      success(
-        action === "APPROVE"
-          ? `${user.name} has been approved.`
-          : action === "REJECT"
-          ? `${user.name} has been rejected.`
-          : `${user.name}'s access has been revoked.`
-      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed.");
+      onUpdated(data.user);
+      success(`${user.name} ${action === "APPROVE" ? "approved" : action === "REJECT" ? "rejected" : "revoked"}.`);
     } catch (err) {
       toastError(err instanceof Error ? err.message : "Action failed.");
     } finally {
@@ -57,118 +43,81 @@ export default function UserCard({ user, onUpdated }: UserCardProps) {
     }
   };
 
-  const joinedDate = new Date(user.createdAt).toLocaleDateString("en-GB", {
-    day: "numeric", month: "short", year: "numeric",
-  });
-
-  // User initials
-  const initials = user.name
-    .split(" ")
-    .slice(0, 2)
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
-
   return (
-    <Card padding="none" className="overflow-hidden">
-      {/* Main row */}
+    <div className="bg-neutral border border-tertiary rounded-md overflow-hidden">
+      {/* Header row */}
       <button
-        className="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-surface/50 transition-colors"
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
+        onClick={() => setExpanded(v => !v)}
+        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface transition-colors text-left"
       >
-        {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-primary text-neutral flex items-center justify-center shrink-0">
-          <span className="text-[11px] font-semibold">{initials}</span>
+        <div className="w-8 h-8 rounded-full bg-[#EFF6FF] text-[#1D4ED8] flex items-center justify-center shrink-0 text-[11px] font-bold">
+          {initials}
         </div>
-
-        {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[14px] font-semibold text-on-surface truncate">
-              {user.name}
-            </span>
-            <AccountStatusBadge status={user.status} size="sm" />
-          </div>
-          <p className="text-[12px] text-secondary truncate">
-            {user.email} · {ROLE_LABELS[user.role]} · {user.department.name}
-          </p>
+          <p className="text-[13px] font-semibold text-on-surface truncate">{user.name}</p>
+          <p className="text-[11px] text-secondary truncate">{user.email}</p>
         </div>
-
-        {/* Expand chevron */}
-        <span className="shrink-0 text-secondary">
-          {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          <AccountStatusBadge status={user.status} size="sm" />
+          {expanded
+            ? <IconChevronUp stroke={1.5} size={14} className="text-secondary" />
+            : <IconChevronDown stroke={1.5} size={14} className="text-secondary" />
+          }
+        </div>
       </button>
 
-      {/* Expanded detail + actions */}
+      {/* Expanded details */}
       {expanded && (
-        <div className="border-t border-tertiary px-4 py-4">
-          {/* Meta */}
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4 text-[12px]">
-            <div>
-              <dt className="text-secondary">Registered</dt>
-              <dd className="text-on-surface font-medium mt-0.5">{joinedDate}</dd>
-            </div>
-            <div>
-              <dt className="text-secondary">Department</dt>
-              <dd className="text-on-surface font-medium mt-0.5 truncate">{user.department.name}</dd>
-            </div>
-            <div>
-              <dt className="text-secondary">Role</dt>
-              <dd className="text-on-surface font-medium mt-0.5">{ROLE_LABELS[user.role]}</dd>
-            </div>
-            {user.approvedBy && (
-              <div>
-                <dt className="text-secondary">Approved by</dt>
-                <dd className="text-on-surface font-medium mt-0.5">{user.approvedBy.name}</dd>
-              </div>
-            )}
+        <div className="border-t border-tertiary px-4 py-3 bg-surface/30">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 mb-4">
+            <MetaRow label="Role"       value={ROLE_LABELS[user.role]} />
+            <MetaRow label="Department" value={user.department.name}   />
+            <MetaRow label="Joined"     value={new Date(user.createdAt).toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" })} />
+            {user.approvedBy && <MetaRow label="Approved by" value={user.approvedBy.name} />}
           </dl>
 
           {/* Action buttons */}
-          <div className="flex gap-2 flex-wrap">
-            {(user.status === "PENDING" || user.status === "REJECTED") && (
-              <Button
-                variant="primary"
-                size="sm"
-                loading={loading === "APPROVE"}
-                disabled={!!loading}
-                leftIcon={<CheckCircle2 size={13} />}
-                onClick={() => handleAction("APPROVE")}
-              >
-                Approve
-              </Button>
-            )}
-
+          <div className="flex flex-wrap gap-2">
             {user.status === "PENDING" && (
-              <Button
-                variant="danger"
-                size="sm"
-                loading={loading === "REJECT"}
-                disabled={!!loading}
-                leftIcon={<XCircle size={13} />}
-                onClick={() => handleAction("REJECT")}
-              >
-                Reject
+              <>
+                <Button variant="primary" size="sm" loading={loading === "APPROVE"}
+                  leftIcon={<IconCircleCheck stroke={1.5} size={13} />}
+                  onClick={() => handleAction("APPROVE")}>
+                  Approve
+                </Button>
+                <Button variant="danger" size="sm" loading={loading === "REJECT"}
+                  leftIcon={<IconCircleX stroke={1.5} size={13} />}
+                  onClick={() => handleAction("REJECT")}>
+                  Reject
+                </Button>
+              </>
+            )}
+            {user.status === "APPROVED" && (
+              <Button variant="ghost" size="sm" loading={loading === "REVOKE"}
+                leftIcon={<IconRefresh stroke={1.5} size={13} />}
+                onClick={() => handleAction("REVOKE")}>
+                Revoke access
               </Button>
             )}
-
-            {user.status === "APPROVED" && (
-              <Button
-                variant="danger"
-                size="sm"
-                loading={loading === "REVOKE"}
-                disabled={!!loading}
-                leftIcon={<RotateCcw size={13} />}
-                onClick={() => handleAction("REVOKE")}
-              >
-                Revoke Access
+            {user.status === "REJECTED" && (
+              <Button variant="secondary" size="sm" loading={loading === "APPROVE"}
+                leftIcon={<IconCircleCheck stroke={1.5} size={13} />}
+                onClick={() => handleAction("APPROVE")}>
+                Approve anyway
               </Button>
             )}
           </div>
         </div>
       )}
-    </Card>
+    </div>
+  );
+}
+
+function MetaRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-[10px] font-semibold text-secondary uppercase tracking-[0.06em]">{label}</dt>
+      <dd className="text-[12px] font-medium text-on-surface mt-0.5 truncate">{value}</dd>
+    </div>
   );
 }
