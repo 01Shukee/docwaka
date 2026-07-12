@@ -62,23 +62,19 @@ export default function DocumentDetailPage() {
 
   return (
     <div>
-      {/* Back */}
       <button onClick={() => router.back()}
         className="inline-flex items-center gap-1.5 mb-5 text-[13px] sm:text-[14px] text-secondary hover:text-on-surface transition-colors">
         <IconArrowLeft stroke={1.5} size={14} />
         Back
       </button>
 
-      {/* Title row */}
       <div className="flex items-start justify-between gap-3 mb-6 flex-wrap">
         <div className="min-w-0 flex-1">
           <h1 className="text-[20px] sm:text-[26px] font-normal leading-tight text-on-surface break-words">
             {document.title}
           </h1>
           {document.description && (
-            <p className="mt-2 text-[13px] sm:text-[15px] leading-6 text-secondary">
-              {document.description}
-            </p>
+            <p className="mt-2 text-[13px] sm:text-[15px] leading-6 text-secondary">{document.description}</p>
           )}
         </div>
         <div className="shrink-0">
@@ -86,20 +82,18 @@ export default function DocumentDetailPage() {
         </div>
       </div>
 
-      {/* Two-column on lg, single column on mobile */}
+      {/* Two-column on lg, single on mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 lg:gap-6">
 
         {/* Left */}
         <div className="flex flex-col gap-4 order-2 lg:order-1">
-
-          {/* Meta card */}
           <Card padding="md">
             <h2 className="text-[11px] font-semibold text-secondary uppercase tracking-[0.06em] mb-3">Details</h2>
-            <dl className="grid grid-cols-2 sm:grid-cols-2 gap-x-6 gap-y-4">
-              <MetaField icon={<IconUser stroke={1.5} size={12} />}     label="From"        value={document.sender.name}    sub={document.sender.department.name} />
-              <MetaField icon={<IconUser stroke={1.5} size={12} />}     label="To"          value={document.recipient.name} sub={document.recipient.department.name} />
-              <MetaField icon={<IconCalendar stroke={1.5} size={12} />} label="Dispatched"  value={sentDate} />
-              <MetaField icon={<IconCalendar stroke={1.5} size={12} />} label="Updated"     value={updatedDate} />
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
+              <MetaField icon={<IconUser stroke={1.5} size={12} />}     label="From"       value={document.sender.name}    sub={document.sender.department.name} />
+              <MetaField icon={<IconUser stroke={1.5} size={12} />}     label="To"         value={document.recipient.name} sub={document.recipient.department.name} />
+              <MetaField icon={<IconCalendar stroke={1.5} size={12} />} label="Dispatched" value={sentDate} />
+              <MetaField icon={<IconCalendar stroke={1.5} size={12} />} label="Updated"    value={updatedDate} />
               {isSender    && <MetaField icon={<IconBuilding stroke={1.5} size={12} />} label="Recipient dept." value={document.recipient.department.name} />}
               {isRecipient && <MetaField icon={<IconBuilding stroke={1.5} size={12} />} label="Sender dept."    value={document.sender.department.name} />}
             </dl>
