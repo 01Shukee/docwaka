@@ -62,7 +62,7 @@ export default function Sidebar({
         {/* ── Logo ─────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-tertiary shrink-0">
           <Link href="/dashboard" onClick={onClose}>
-            <DocwakaWordmark size={16} logoSize={36} variant="light" />
+            <DocwakaWordmark size={17} logoSize={48} variant="light" />
           </Link>
           <button
             onClick={onClose}

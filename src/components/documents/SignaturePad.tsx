@@ -3,7 +3,7 @@
 "use client";
 
 import { useRef, useState, useCallback, useEffect } from "react";
-import { Pen, Type, RotateCcw } from "lucide-react";
+import { IconPencil, IconRotate2, IconTypography } from "@tabler/icons-react";
 import Modal, { ModalFooter } from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 
@@ -163,7 +163,7 @@ export default function SignaturePad({
       open={open}
       onClose={onClose}
       title="Add Signature"
-      size="lg"
+      size="xl"
     >
       {/* Mode tabs */}
       <div className="flex gap-1 p-1 bg-surface rounded-full mb-5 w-fit">
@@ -181,7 +181,7 @@ export default function SignaturePad({
                 : "text-secondary hover:text-on-surface",
             ].join(" ")}
           >
-            {m === "draw" ? <Pen size={13} /> : <Type size={13} />}
+            {m === "draw" ? <IconPencil stroke={1.5} size={13} /> : <IconTypography stroke={1.5} size={13} />}
             {m === "draw" ? "Draw" : "Type"}
           </button>
         ))}
@@ -240,7 +240,7 @@ export default function SignaturePad({
           }}
           className="inline-flex items-center gap-1.5 text-[13px] text-secondary hover:text-on-surface transition-colors"
         >
-          <RotateCcw size={13} />
+          <IconRotate2 stroke={1.5} size={13} />
           Clear
         </button>
       </div>

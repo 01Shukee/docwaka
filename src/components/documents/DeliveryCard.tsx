@@ -3,7 +3,7 @@
 "use client";
 
 import { useState } from "react";
-import { PackageCheck } from "lucide-react";
+import { IconPackage } from "@tabler/icons-react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
@@ -96,7 +96,7 @@ export default function DeliveryCard({
           size="md"
           fullWidth
           loading={loading}
-          leftIcon={<PackageCheck size={14} />}
+          leftIcon={<IconPackage stroke={1.5} size={14} />}
           onClick={handleDeliver}
         >
           {confirmed ? "Yes, Confirm Delivery" : "Confirm Delivery"}

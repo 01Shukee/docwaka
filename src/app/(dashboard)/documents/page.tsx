@@ -73,7 +73,7 @@ export default function DocumentsPage() {
 
       {loading
         ? <FullPageSpinner label={`Loading ${tab}…`} />
-        : <DocumentList documents={documents} perspective={tab} onNewDocument={() => router.push("/documents/new")} />
+        : <DocumentList documents={documents} view={tab} onNewDocument={() => router.push("/documents/new")} />
       }
     </div>
   );

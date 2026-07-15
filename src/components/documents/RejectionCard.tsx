@@ -1,6 +1,6 @@
 // src/components/documents/RejectionCard.tsx
 
-import { XCircle } from "lucide-react";
+import { IconCircleX } from "@tabler/icons-react";
 import { Card } from "@/components/ui/Card";
 import type { RejectionLog } from "@/types/document";
 
@@ -30,7 +30,7 @@ export default function RejectionCard({ rejectionLogs }: RejectionCardProps) {
   return (
     <Card className="border-red-200 bg-red-50">
       <div className="flex items-start gap-3">
-        <XCircle
+        <IconCircleX
           size={18}
           className="text-error shrink-0 mt-0.5"
           strokeWidth={1.75}

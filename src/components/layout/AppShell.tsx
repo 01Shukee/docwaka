@@ -58,7 +58,7 @@ export default function AppShell({
               ) : (
                 /* Mobile: logo wordmark when no page title */
                 <div className="lg:hidden">
-                  <DocwakaWordmark size={14} logoSize={36} variant="light" />
+                  <DocwakaWordmark size={15} logoSize={44} variant="light" />
                 </div>
               )}
             </div>

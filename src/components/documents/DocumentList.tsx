@@ -7,14 +7,14 @@ import EmptyState from "@/components/ui/EmptyState";
 import type { Document } from "@/types/document";
 
 interface DocumentListProps {
-  documents:     Document[];
-  perspective:   "inbox" | "outbox";
+  documents:      Document[];
+  view:           "inbox" | "outbox";
   onNewDocument?: () => void;
 }
 
-export default function DocumentList({ documents, perspective, onNewDocument }: DocumentListProps) {
+export default function DocumentList({ documents, view, onNewDocument }: DocumentListProps) {
   if (documents.length === 0) {
-    return perspective === "inbox" ? (
+    return view === "inbox" ? (
       <EmptyState
         icon={IconInbox}
         title="Your inbox is empty"
@@ -33,9 +33,12 @@ export default function DocumentList({ documents, perspective, onNewDocument }: 
   return (
     <ol className="flex flex-col gap-2 sm:gap-3">
       {documents.map((doc, i) => (
-        <li key={doc.id} style={{ animationDelay: `${i * 40}ms`, animationFillMode: "both" }}
-          className="animate-[slideInUp_200ms_ease-out]">
-          <DocumentCard document={doc} view={perspective} />
+        <li
+          key={doc.id}
+          style={{ animationDelay: `${i * 40}ms`, animationFillMode: "both" }}
+          className="animate-[slideInUp_200ms_ease-out]"
+        >
+          <DocumentCard doc={doc} view={view} />
         </li>
       ))}
     </ol>

@@ -3,7 +3,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, ImageIcon, ExternalLink, AlertCircle } from "lucide-react";
+import { IconAlertCircle, IconExternalLink, IconFileText, IconPhoto } from "@tabler/icons-react";
 import { Card } from "@/components/ui/Card";
 
 interface FilePreviewProps {
@@ -40,9 +40,9 @@ export default function FilePreview({
       <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-tertiary">
         <div className="flex items-center gap-2 min-w-0">
           {fileType === "pdf" ? (
-            <FileText size={15} className="text-secondary shrink-0" />
+            <IconFileText stroke={1.5} size={15} className="text-secondary shrink-0" />
           ) : (
-            <ImageIcon size={15} className="text-secondary shrink-0" />
+            <IconPhoto stroke={1.5} size={15} className="text-secondary shrink-0" />
           )}
           <span className="text-[13px] font-medium text-on-surface truncate">
             {displayName}
@@ -56,7 +56,7 @@ export default function FilePreview({
           className="shrink-0 inline-flex items-center gap-1 text-[12px] text-secondary hover:text-on-surface transition-colors"
           aria-label="Open file in new tab"
         >
-          <ExternalLink size={13} />
+          <IconExternalLink stroke={1.5} size={13} />
           Open
         </a>
       </div>
@@ -65,7 +65,7 @@ export default function FilePreview({
       <div className="bg-surface">
         {loadError ? (
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-secondary">
-            <AlertCircle size={24} strokeWidth={1.5} />
+            <IconAlertCircle stroke={1.5} size={24} strokeWidth={1.5} />
             <p className="text-[13px]">Preview unavailable</p>
             <a
               href={fileUrl}
@@ -94,7 +94,7 @@ export default function FilePreview({
           />
         ) : (
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-secondary">
-            <FileText size={24} strokeWidth={1.5} />
+            <IconFileText stroke={1.5} size={24} strokeWidth={1.5} />
             <p className="text-[13px]">No preview available for this file type.</p>
             <a
               href={fileUrl}

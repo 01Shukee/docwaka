@@ -3,7 +3,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, XCircle, Pen, AlertTriangle } from "lucide-react";
+import { IconAlertTriangle, IconCircleCheck, IconCircleX, IconPencil } from "@tabler/icons-react";
 import { Card, CardHeader } from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Input";
@@ -119,12 +119,12 @@ export default function ActionCard({
         <div className="flex items-center gap-2 mb-4 text-[13px]">
           {hasSigned ? (
             <span className="flex items-center gap-1.5 text-emerald-600 font-medium">
-              <CheckCircle2 size={14} />
+              <IconCircleCheck stroke={1.5} size={14} />
               Signature captured
             </span>
           ) : (
             <span className="flex items-center gap-1.5 text-secondary">
-              <AlertTriangle size={14} className="text-yellow-500" />
+              <IconAlertTriangle stroke={1.5} size={14} className="text-yellow-500" />
               Signature required before accepting
             </span>
           )}
@@ -136,7 +136,7 @@ export default function ActionCard({
             variant="secondary"
             size="md"
             fullWidth
-            leftIcon={<Pen size={14} />}
+            leftIcon={<IconPencil stroke={1.5} size={14} />}
             onClick={() => setSigPadOpen(true)}
             className="mb-3"
           >
@@ -161,7 +161,7 @@ export default function ActionCard({
             fullWidth
             disabled={!hasSigned || actionLoading}
             loading={actionLoading && !rejectOpen}
-            leftIcon={<CheckCircle2 size={14} />}
+            leftIcon={<IconCircleCheck stroke={1.5} size={14} />}
             onClick={() => handleAction("ACCEPT")}
           >
             Accept
@@ -172,7 +172,7 @@ export default function ActionCard({
             size="md"
             fullWidth
             disabled={actionLoading}
-            leftIcon={<XCircle size={14} />}
+            leftIcon={<IconCircleX stroke={1.5} size={14} />}
             onClick={() => setRejectOpen((v) => !v)}
           >
             Reject
