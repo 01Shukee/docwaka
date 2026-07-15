@@ -1,7 +1,7 @@
 // src/app/(auth)/login/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -17,7 +17,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   CredentialsSignin:       "Incorrect email or password.",
 };
 
-export default function LoginPage() {
+function LoginContent() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl  = searchParams.get("callbackUrl") ?? "/dashboard";
@@ -93,5 +93,14 @@ export default function LoginPage() {
         <Link href="/register" className="font-medium text-on-surface hover:underline underline-offset-2">Register</Link>
       </p>
     </div>
+  );
+}
+
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center p-8">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
