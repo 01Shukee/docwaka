@@ -2,7 +2,7 @@
 
 import type { HTMLAttributes } from "react";
 
-interface CardProps extends HTMLAttributes<HTMLDivElement> {
+interface CardProps extends HTMLAttributes<HTMLElement> {
   padding?: "none" | "sm" | "md" | "lg";
   hover?:   boolean;
   as?:      "div" | "article" | "section" | "li";
