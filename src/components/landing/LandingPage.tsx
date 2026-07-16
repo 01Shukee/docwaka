@@ -137,14 +137,7 @@ export default function LandingPage() {
         </div>
 
         {/* Desktop links — pushed right regardless of whether logo is present */}
-        <div style={{ display:"flex", alignItems:"center", gap:8, marginLeft:"auto" }} className="hidden sm:flex">
-          <Link href="/login" style={{ fontSize:13, fontWeight:500, color:"#707070", padding:"8px 18px", borderRadius:9999, border:"1px solid #E5E7EB", textDecoration:"none", background:"#fff" }}>
-            Sign in
-          </Link>
-          <Link href="/register" style={{ fontSize:13, fontWeight:700, color:"#fff", padding:"8px 18px", borderRadius:9999, background:"#141414", textDecoration:"none" }}>
-            Get started →
-          </Link>
-        </div>
+
 
         {/* Mobile hamburger */}
         <button
