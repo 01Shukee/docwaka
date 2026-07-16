@@ -355,10 +355,8 @@ export default function LandingPage() {
           {[
             { n:"73",   l:"Depts & admin units"  },
             { n:"11",   l:"Academic schools"      },
-            { n:"5",    l:"Role tiers"            },
-            { n:"5",    l:"Document states"       },
             { n:"100%", l:"Events traceable"      },
-            { n:"0",    l:"Documents ever lost"   },
+            { n:"0",    l:"Documents lost"   },
           ].map((s,i) => (
             <div key={i} className="flex-1 border-r border-[#E5E7EB] last:border-none py-6 sm:py-8 text-center px-2" style={{ minWidth:0 }}>
               <div style={{ fontSize:"clamp(24px,4vw,44px)", fontWeight:800, letterSpacing:"-1px", color:"#141414", lineHeight:1 }}>{s.n}</div>

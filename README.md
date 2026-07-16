@@ -13,7 +13,7 @@ Federal University of Technology Owerri (FUTO) internal document routing and tra
 | Database | PostgreSQL (via Prisma ORM) |
 | Auth | NextAuth v5 — JWT, Credentials provider |
 | File storage | UploadThing (PDF / image) |
-| Styling | Tailwind CSS — Mobbin Minimal design system |
+| Styling | Tailwind CSS — Mobbin design system |
 | Validation | Zod |
 
 ---
@@ -124,7 +124,7 @@ STAFF
 docwaka/
 ├── prisma/
 │   ├── schema.prisma        # 7 models, 4 enums
-│   └── seed.ts              # 43 FUTO departments + SYS_ADMIN
+│   └── seed.ts              # 73 FUTO departments + SYS_ADMIN
 ├── src/
 │   ├── lib/                 # Prisma, Auth, bcrypt, audit, UploadThing, Zod
 │   ├── types/               # TypeScript types for user, document, next-auth
