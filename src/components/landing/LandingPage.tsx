@@ -129,10 +129,15 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* NAV — links only, logo lives in the hero sidebar */}
-      <nav style={{ display:"flex", alignItems:"center", justifyContent:"flex-end", maxWidth:1200, margin:"0 auto", padding:"16px 24px" }}>
-        {/* Desktop links */}
-        <div style={{ display:"flex", alignItems:"center", gap:8 }} className="hidden sm:flex">
+      {/* NAV — logo on mobile/tablet (hero sidebar logo takes over on lg+), links always */}
+      <nav style={{ display:"flex", alignItems:"center", justifyContent:"flex-start", maxWidth:1200, margin:"0 auto", padding:"16px 24px" }}>
+        {/* Logo — visible until lg, where the hero sidebar shows its own */}
+        <div className="lg:hidden">
+          <DocwakaWordmark size={16} logoSize={40} variant="light" />
+        </div>
+
+        {/* Desktop links — pushed right regardless of whether logo is present */}
+        <div style={{ display:"flex", alignItems:"center", gap:8, marginLeft:"auto" }} className="hidden sm:flex">
           <Link href="/login" style={{ fontSize:13, fontWeight:500, color:"#707070", padding:"8px 18px", borderRadius:9999, border:"1px solid #E5E7EB", textDecoration:"none", background:"#fff" }}>
             Sign in
           </Link>
@@ -146,7 +151,7 @@ export default function LandingPage() {
           onClick={() => setMenuOpen(v=>!v)}
           className="sm:hidden"
           aria-label="Menu"
-          style={{ padding:8, background:"none", border:"none", cursor:"pointer", color:"#707070" }}
+          style={{ padding:8, background:"none", border:"none", cursor:"pointer", color:"#707070", marginLeft:"auto" }}
         >
           <div style={{ width:20, display:"flex", flexDirection:"column", gap:4 }}>
             <div style={{ height:2, background:"currentColor", borderRadius:2 }} />
