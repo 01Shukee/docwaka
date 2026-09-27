@@ -102,13 +102,17 @@ export default function Sidebar({
             </div>
             <IconUser size={14} stroke={1.5} className="shrink-0 text-secondary group-hover:text-on-surface" />
           </Link>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="w-full flex items-center gap-2.5 px-2 py-2 mt-0.5 rounded-md text-[13px] font-medium text-secondary hover:bg-surface hover:text-on-surface transition-colors"
-          >
-            <IconLogout size={14} stroke={1.5} className="shrink-0" />
-            Sign out
-          </button>
+<button
+  onClick={() =>
+    signOut({
+      callbackUrl: `${window.location.origin}/login`,
+    })
+  }
+  className="w-full flex items-center gap-2.5 px-2 py-2 mt-0.5 rounded-md text-[13px] font-medium text-secondary hover:bg-surface hover:text-on-surface transition-colors"
+>
+  <IconLogout size={14} stroke={1.5} className="shrink-0" />
+  Sign out
+</button>
         </div>
       </aside>
     </>
