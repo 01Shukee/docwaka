@@ -11,7 +11,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen bg-background flex flex-col">
       <div className="flex items-center px-6 sm:px-8 py-5 border-b border-tertiary">
         <a href="/">
-          <DocwakaWordmark size={16} logoSize={36} variant="light" />
+          <DocwakaWordmark size={17} logoSize={48} variant="light" />
         </a>
       </div>
 

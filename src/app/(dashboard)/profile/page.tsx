@@ -1,6 +1,7 @@
 // src/app/(dashboard)/profile/page.tsx
 "use client";
 
+import { useSession } from "next-auth/react";
 import { useState, useEffect, useCallback } from "react";
 import { IconEye, IconEyeOff, IconDeviceFloppy, IconLock } from "@tabler/icons-react";
 import { Card, CardHeader, CardDivider } from "@/components/ui/Card";
@@ -16,6 +17,7 @@ export default function ProfilePage() {
   const { success, error: toastError } = useToast();
   const [profile,  setProfile]  = useState<UserProfile | null>(null);
   const [loading,  setLoading]  = useState(true);
+  const { update: updateSession } = useSession();
   const [name,     setName]     = useState("");
   const [nameLoading, setNameLoading] = useState(false);
   const [currentPw,  setCurrentPw]  = useState("");
@@ -44,6 +46,7 @@ export default function ProfilePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed.");
       setProfile(prev => prev ? { ...prev, name: data.user.name } : prev);
+      await updateSession(); // re-issue the JWT so the sidebar/header show the new name
       success("Name updated.");
     } catch (err) { toastError(err instanceof Error ? err.message : "Failed."); }
     finally { setNameLoading(false); }
@@ -146,7 +149,7 @@ export default function ProfilePage() {
               <Input id="currPw" type={showCurrPw ? "text" : "password"} placeholder="Current password"
                 value={currentPw} onChange={e => { setCurrentPw(e.target.value); setPwErrors(p => ({ ...p, currentPw: "" })); }}
                 disabled={pwLoading} error={!!pwErrors.currentPw} className="pr-11" autoComplete="current-password" />
-              <button type="button" onClick={() => setShowCurrPw(v => !v)}
+              <button type="button" onClick={() => setShowCurrPw(v => !v)} data-skip-global-loading
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:text-on-surface transition-colors">
                 {showCurrPw ? <IconEyeOff stroke={1.5} size={15} /> : <IconEye stroke={1.5} size={15} />}
               </button>
@@ -158,7 +161,7 @@ export default function ProfilePage() {
               <Input id="newPw" type={showNewPw ? "text" : "password"} placeholder="New password"
                 value={newPw} onChange={e => { setNewPw(e.target.value); setPwErrors(p => ({ ...p, newPw: "" })); }}
                 disabled={pwLoading} error={!!pwErrors.newPw} className="pr-11" autoComplete="new-password" />
-              <button type="button" onClick={() => setShowNewPw(v => !v)}
+              <button type="button" onClick={() => setShowNewPw(v => !v)} data-skip-global-loading
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:text-on-surface transition-colors">
                 {showNewPw ? <IconEyeOff stroke={1.5} size={15} /> : <IconEye stroke={1.5} size={15} />}
               </button>

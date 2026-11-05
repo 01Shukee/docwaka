@@ -6,6 +6,7 @@ import { hashPassword } from "@/lib/bcrypt";
 import { registerSchema } from "@/lib/validations";
 import { apiError } from "@/lib/auth-helpers";
 import { ZodError } from "zod";
+import { Prisma } from "@prisma/client";
 
 /**
  * POST /api/register
@@ -21,7 +22,7 @@ import { ZodError } from "zod";
  */
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
 
     // ── 1. Validate input ────────────────────────────────────────────────────
     const parsed = registerSchema.safeParse(body);
@@ -38,43 +39,28 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return apiError("This role cannot be registered publicly.", 400);
     }
 
-    // ── 3. Verify department exists ──────────────────────────────────────────
-    const department = await prisma.department.findUnique({
-      where: { id: departmentId },
-    });
-    if (!department) {
-      return apiError("Selected department does not exist.", 400);
-    }
+    // ── 3/4. Department + duplicate email (parallel) ────────────────────────
+    const [department, existingUser] = await Promise.all([
+      prisma.department.findUnique({ where: { id: departmentId }, select: { id: true } }),
+      prisma.user.findUnique({ where: { email }, select: { id: true } }),
+    ]);
+    if (!department)   return apiError("Selected department does not exist.", 400);
+    if (existingUser)  return apiError("An account with this email already exists.", 409);
 
-    // ── 4. Duplicate email check ─────────────────────────────────────────────
-    const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
-    });
-    if (existingUser) {
-      return apiError("An account with this email already exists.", 409);
-    }
-
-    // ── 5. Per-department role uniqueness constraints (FSD §3.4) ─────────────
-    if (role === "HOD" || role === "DEAN") {
+    // ── 5. Per-department seat uniqueness (FSD §3.4) ─────────────────────────
+    // REJECTED accounts don't hold a seat — otherwise one rejected registration
+    // would block the role in that department forever.
+    if (role === "HOD" || role === "DEAN" || role === "DEPT_ADMIN") {
       const conflict = await prisma.user.findFirst({
-        where: { departmentId, role },
+        where:  { departmentId, role, status: { not: "REJECTED" } },
+        select: { id: true },
       });
       if (conflict) {
-        const label = role === "HOD" ? "Head of Department" : "Dean";
+        const label =
+          role === "HOD" ? "Head of Department" :
+          role === "DEAN" ? "Dean" : "Department Administrator";
         return apiError(
           `This department already has a registered ${label}. Only one is permitted per department.`,
-          409
-        );
-      }
-    }
-
-    if (role === "DEPT_ADMIN") {
-      const conflict = await prisma.user.findFirst({
-        where: { departmentId, role: "DEPT_ADMIN" },
-      });
-      if (conflict) {
-        return apiError(
-          "This department already has a registered Department Administrator.",
           409
         );
       }
@@ -85,8 +71,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     const user = await prisma.user.create({
       data: {
-        name:         name.trim(),
-        email:        email.toLowerCase().trim(),
+        name,
+        email,
         password:     hashedPassword,
         role,
         status:       "PENDING",
@@ -111,6 +97,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       { status: 201 }
     );
   } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return apiError("An account with this email already exists.", 409);
+    }
     if (err instanceof ZodError) {
       return apiError(err.errors[0]?.message ?? "Invalid input.", 400);
     }

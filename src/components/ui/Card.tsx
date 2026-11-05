@@ -1,8 +1,8 @@
 // src/components/ui/Card.tsx
 
-import type { HTMLAttributes } from "react";
+import type { ElementType, HTMLAttributes } from "react";
 
-interface CardProps extends HTMLAttributes<HTMLElement> {
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
   padding?: "none" | "sm" | "md" | "lg";
   hover?:   boolean;
   as?:      "div" | "article" | "section" | "li";
@@ -27,11 +27,12 @@ const PADDING: Record<NonNullable<CardProps["padding"]>, string> = {
 export function Card({
   padding   = "md",
   hover     = false,
-  as:       Tag = "div",
+  as:       tag = "div",
   children,
   className = "",
   ...rest
 }: CardProps) {
+  const Tag = tag as ElementType; // assertion stops TS narrowing it back to the tag union
   return (
     <Tag
       className={[

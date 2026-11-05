@@ -110,53 +110,42 @@ const DEPARTMENTS: string[] = [
 
 async function main() {
   console.log("🌱  Seeding DocWaka database...\n");
-  console.log(`📁  Seeding ${DEPARTMENTS.length} departments/units...`);
 
-  const departmentRecords = [];
-  for (const name of DEPARTMENTS) {
-    const dept = await prisma.department.upsert({
-      where: { name }, update: {}, create: { name },
-    });
-    departmentRecords.push(dept);
-    process.stdout.write(".");
-  }
-  console.log(`\n    ✓ ${departmentRecords.length} entries ready.\n`);
+  // One round trip instead of ~80 sequential upserts; existing names are skipped.
+  const { count } = await prisma.department.createMany({
+    data: DEPARTMENTS.map((name) => ({ name })),
+    skipDuplicates: true,
+  });
+  console.log(`📁  ${count} new departments created (${DEPARTMENTS.length - count} already existed).\n`);
 
   // ── SYS_ADMIN ─────────────────────────────────────────────────────────────
-  const adminDept = departmentRecords.find(d => d.name === "Registry");
-  if (!adminDept) throw new Error("Registry not found.");
+  const adminDept = await prisma.department.findUnique({ where: { name: "Registry" } });
+  if (!adminDept) throw new Error("Registry department not found.");
 
-  const ADMIN_EMAIL    = "admin@docwaka.com";
-  const ADMIN_PASSWORD = "Admin@1234";
-  const hash     = await bcrypt.hash(ADMIN_PASSWORD, 10);
-  const selfCheck = await bcrypt.compare(ADMIN_PASSWORD, hash);
-  if (!selfCheck) throw new Error("bcrypt self-check failed.");
+  const ADMIN_EMAIL = (process.env.ADMIN_EMAIL ?? "admin@docwaka.com").toLowerCase();
+  const existing = await prisma.user.findUnique({ where: { email: ADMIN_EMAIL }, select: { id: true } });
 
-  await prisma.user.upsert({
-    where:  { email: ADMIN_EMAIL },
-    update: { password: hash, status: AccountStatus.APPROVED, role: Role.SYS_ADMIN },
-    create: { name: "System Administrator", email: ADMIN_EMAIL, password: hash, role: Role.SYS_ADMIN, status: AccountStatus.APPROVED, departmentId: adminDept.id },
-  });
+  if (existing) {
+    // Never overwrite an existing admin's password/role on re-seed.
+    console.log(`👤  SYS_ADMIN ${ADMIN_EMAIL} already exists — left unchanged.`);
+  } else {
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+    if (!ADMIN_PASSWORD || ADMIN_PASSWORD.length < 8) {
+      throw new Error("Set ADMIN_PASSWORD (min 8 chars) in the environment to create the first SYS_ADMIN.");
+    }
+    await prisma.user.create({
+      data: {
+        name: "System Administrator", email: ADMIN_EMAIL,
+        password: await bcrypt.hash(ADMIN_PASSWORD, 10),
+        role: Role.SYS_ADMIN, status: AccountStatus.APPROVED, departmentId: adminDept.id,
+      },
+    });
+    console.log(`👤  SYS_ADMIN created: ${ADMIN_EMAIL}`);
+  }
 
-  const stored = await prisma.user.findUnique({ where: { email: ADMIN_EMAIL }, select: { password: true, status: true } });
-  if (!stored) throw new Error("Admin not found after upsert.");
-
-  const dbCheck = await bcrypt.compare(ADMIN_PASSWORD, stored.password);
-  console.log(`👤  SYS_ADMIN:`);
-  console.log(`    Email:    ${ADMIN_EMAIL}`);
-  console.log(`    Password: ${ADMIN_PASSWORD}`);
-  console.log(`    DB hash:  ${dbCheck ? "✅ VALID" : "❌ INVALID"}\n`);
-  if (!dbCheck) throw new Error("Hash mismatch — login will fail.");
-
-  // Summary
-  const academic = DEPARTMENTS.filter(d => d.includes("–")).length;
-  const admin    = DEPARTMENTS.filter(d => !d.includes("–") && !d.includes("SPGS") && !d.includes("GST")).length;
-  console.log(`✅  Done.`);
-  console.log(`    ${academic} academic departments across 11 schools`);
-  console.log(`    ${admin} administrative units`);
-  console.log(`    ${departmentRecords.length} total entries`);
+  console.log("\n✅  Done.");
 }
 
 main()
-  .catch(e => { console.error("❌ Seed failed:", e); process.exit(1); })
+  .catch((e) => { console.error("❌ Seed failed:", e); process.exit(1); })
   .finally(async () => { await prisma.$disconnect(); });

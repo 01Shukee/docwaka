@@ -3,13 +3,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, apiError } from "@/lib/auth-helpers";
+import { documentListSelect } from "@/lib/documents";
 
-/**
- * GET /api/documents/outbox
- *
- * FSD §4.3 — Returns all documents where the current user is the sender,
- * ordered newest first. Shows current status of each dispatched document.
- */
+/** GET /api/documents/outbox — documents dispatched by the current user. */
 export async function GET(): Promise<NextResponse> {
   try {
     const { user, error } = await requireAuth();
@@ -17,10 +13,7 @@ export async function GET(): Promise<NextResponse> {
 
     const documents = await prisma.document.findMany({
       where:   { senderId: user.id },
-      include: {
-        sender:    { select: { id: true, name: true, email: true, department: { select: { id: true, name: true } } } },
-        recipient: { select: { id: true, name: true, email: true, department: { select: { id: true, name: true } } } },
-      },
+      select:  documentListSelect,
       orderBy: { updatedAt: "desc" },
     });
 

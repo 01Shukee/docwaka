@@ -13,7 +13,7 @@ Federal University of Technology Owerri (FUTO) internal document routing and tra
 | Database | PostgreSQL (via Prisma ORM) |
 | Auth | NextAuth v5 — JWT, Credentials provider |
 | File storage | UploadThing (PDF / image) |
-| Styling | Tailwind CSS — Mobbin design system |
+| Styling | Tailwind CSS — Mobbin Minimal design system |
 | Validation | Zod |
 
 ---
@@ -71,11 +71,10 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Default Credentials
+## First Admin Account
 
-| Role | Email | Password |
-|---|---|---|
-| System Administrator | `********` | `********` |
+Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env`, then run `npm run db:seed`.
+The seed creates the SYS_ADMIN only if it doesn't exist and never overwrites an existing admin's password.
 
 All other accounts are created via `/register` and require approval before login.
 
@@ -124,7 +123,7 @@ STAFF
 docwaka/
 ├── prisma/
 │   ├── schema.prisma        # 7 models, 4 enums
-│   └── seed.ts              # 73 FUTO departments + SYS_ADMIN
+│   └── seed.ts              # 43 FUTO departments + SYS_ADMIN
 ├── src/
 │   ├── lib/                 # Prisma, Auth, bcrypt, audit, UploadThing, Zod
 │   ├── types/               # TypeScript types for user, document, next-auth
@@ -146,7 +145,7 @@ docwaka/
 
 ## Design System
 
-Minimal — key tokens:
+Mobbin Minimal — key tokens:
 
 | Token | Value |
 |---|---|
@@ -174,3 +173,9 @@ npm start
 Recommended platforms: **Vercel** (Next.js) + **Railway** or **Neon** (PostgreSQL).
 
 Set all `.env.local` variables as environment variables in your deployment platform.
+
+---
+
+## Email Notifications
+
+Set the `SMTP_*`, `EMAIL_FROM` and `NEXT_PUBLIC_APP_URL` variables (see `.env.example`). Recipients get an email when a document is sent to them; senders get one when it is accepted, rejected or delivered; users get one when their account is approved or rejected.

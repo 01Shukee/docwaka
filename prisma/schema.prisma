@@ -67,24 +67,19 @@ model User {
   departmentId String
   department   Department @relation(fields: [departmentId], references: [id])
 
-  // The user who approved this account
-  approvedById String?
-  approvedBy   User?   @relation("ApproverApproved", fields: [approvedById], references: [id])
-  approvedUsers User[] @relation("ApproverApproved")
+  approvedById  String?
+  approvedBy    User?   @relation("ApproverApproved", fields: [approvedById], references: [id])
+  approvedUsers User[]  @relation("ApproverApproved")
 
-  // Documents
-  sentDocuments     Document[]  @relation("DocumentSender")
-  receivedDocuments Document[]  @relation("DocumentRecipient")
+  sentDocuments     Document[] @relation("DocumentSender")
+  receivedDocuments Document[] @relation("DocumentRecipient")
 
-  // Signatures
-  signatures Signature[]
-
-  // Audit logs authored by this user
-  auditLogs AuditLog[]
-
-  // Rejection logs authored by this user
+  signatures    Signature[]
+  auditLogs     AuditLog[]
   rejectionLogs RejectionLog[]
 
+  @@index([departmentId, role])
+  @@index([status])
   @@map("users")
 }
 
@@ -103,39 +98,47 @@ model Document {
   recipientId String
   recipient   User   @relation("DocumentRecipient", fields: [recipientId], references: [id])
 
-  // Relations
   signatures    Signature[]
   rejectionLogs RejectionLog[]
   auditLogs     AuditLog[]
 
+  // Inbox / outbox / pending-count queries
+  @@index([recipientId, status])
+  @@index([recipientId, updatedAt])
+  @@index([senderId, updatedAt])
   @@map("documents")
 }
 
 model Signature {
-  id         String   @id @default(cuid())
-  data       String   // base64 PNG data URL
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  data      String
+  createdAt DateTime @default(now())
 
   documentId String
   document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
+  // One signature per user per document (also makes re-signing an atomic upsert)
+  @@unique([documentId, userId])
+  @@index([userId])
   @@map("signatures")
 }
 
 model RejectionLog {
-  id         String   @id @default(cuid())
-  reason     String
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  reason    String
+  createdAt DateTime @default(now())
 
-  documentId String
-  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId   String
+  document     Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   rejectedById String
   rejectedBy   User   @relation(fields: [rejectedById], references: [id])
 
+  @@index([documentId])
+  @@index([rejectedById])
   @@map("rejection_logs")
 }
 
@@ -148,8 +151,11 @@ model AuditLog {
   documentId String
   document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
+  @@index([documentId, createdAt])
+  @@index([userId])
+  @@index([createdAt])
   @@map("audit_logs")
 }

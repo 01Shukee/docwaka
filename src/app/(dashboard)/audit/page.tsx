@@ -127,12 +127,12 @@ export default function AuditPage() {
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} data-skip-global-loading disabled={page === 1}
                 className="inline-flex items-center gap-1.5 text-[13px] text-secondary hover:text-on-surface disabled:opacity-40 disabled:pointer-events-none">
                 <IconChevronLeft size={14} stroke={1.5} /> Previous
               </button>
               <span className="text-[12px] text-secondary">Page {page} of {totalPages}</span>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} data-skip-global-loading disabled={page === totalPages}
                 className="inline-flex items-center gap-1.5 text-[13px] text-secondary hover:text-on-surface disabled:opacity-40 disabled:pointer-events-none">
                 Next <IconChevronRight size={14} stroke={1.5} />
               </button>

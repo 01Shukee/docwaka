@@ -47,7 +47,7 @@ export default function UserCard({ user, onUpdated }: UserCardProps) {
     <div className="bg-neutral border border-tertiary rounded-md overflow-hidden">
       {/* Header row */}
       <button
-        onClick={() => setExpanded(v => !v)}
+        onClick={() => setExpanded(v => !v)} data-skip-global-loading
         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface transition-colors text-left"
       >
         <div className="w-8 h-8 rounded-full bg-[#EFF6FF] text-[#1D4ED8] flex items-center justify-center shrink-0 text-[11px] font-bold">

@@ -16,7 +16,9 @@ export interface Document {
   id:          string;
   title:       string;
   description: string | null;
-  fileUrl:     string | null;
+  /** Omitted from list endpoints (attachments can be huge); present on detail. */
+  fileUrl?:    string | null;
+  fileKind?:   "pdf" | "image" | null;
   status:      DocumentStatus;
   createdAt:   string;
   updatedAt:   string;

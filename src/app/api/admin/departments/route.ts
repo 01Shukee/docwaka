@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole, apiError } from "@/lib/auth-helpers";
+import { Prisma } from "@prisma/client";
 import { createDepartmentSchema } from "@/lib/validations";
 
 /**
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const { error } = await requireRole(["SYS_ADMIN"]);
     if (error) return error;
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
     const parsed = createDepartmentSchema.safeParse(body);
     if (!parsed.success) {
       return apiError(parsed.error.errors[0]?.message ?? "Invalid input.", 400);
@@ -54,12 +55,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
 
     const department = await prisma.department.create({
-      data: { name: name.trim() },
+      data: { name },
       include: { _count: { select: { users: true } } },
     });
 
     return NextResponse.json({ department }, { status: 201 });
   } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return apiError("A department with this name already exists.", 409);
+    }
     console.error("[POST /api/admin/departments]", err);
     return apiError("Failed to create department.", 500);
   }
@@ -96,6 +100,9 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({ message: "Department deleted." });
   } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") {
+      return apiError("Cannot delete a department that has users assigned to it.", 409);
+    }
     console.error("[DELETE /api/admin/departments]", err);
     return apiError("Failed to delete department.", 500);
   }

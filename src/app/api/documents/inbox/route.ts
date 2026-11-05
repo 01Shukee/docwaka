@@ -3,32 +3,22 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, apiError } from "@/lib/auth-helpers";
+import { documentListSelect } from "@/lib/documents";
 
-/**
- * GET /api/documents/inbox
- *
- * FSD §4.3 — Returns all documents where the current user is the recipient,
- * ordered newest first. Also returns a pendingCount for the badge on the
- * Inbox tab.
- */
+/** GET /api/documents/inbox — documents addressed to the current user + pending badge count. */
 export async function GET(): Promise<NextResponse> {
   try {
     const { user, error } = await requireAuth();
     if (error) return error;
 
-    const [documents, pendingCount] = await Promise.all([
-      prisma.document.findMany({
-        where:   { recipientId: user.id },
-        include: {
-          sender:    { select: { id: true, name: true, email: true, department: { select: { id: true, name: true } } } },
-          recipient: { select: { id: true, name: true, email: true, department: { select: { id: true, name: true } } } },
-        },
-        orderBy: { updatedAt: "desc" },
-      }),
-      prisma.document.count({
-        where: { recipientId: user.id, status: "PENDING" },
-      }),
-    ]);
+    const documents = await prisma.document.findMany({
+      where:   { recipientId: user.id },
+      select:  documentListSelect,
+      orderBy: { updatedAt: "desc" },
+    });
+
+    // The full list is returned, so no second COUNT query is needed.
+    const pendingCount = documents.reduce((n, d) => n + (d.status === "PENDING" ? 1 : 0), 0);
 
     return NextResponse.json({ documents, pendingCount });
   } catch (err) {

@@ -57,7 +57,7 @@ export default function Modal({ open, onClose, title, children, size = "md", hid
           <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-tertiary">
             {title && <h2 id="modal-title" className="text-[16px] font-semibold leading-5 text-on-surface">{title}</h2>}
             {!hideClose && (
-              <button onClick={onClose} aria-label="Close modal"
+              <button onClick={onClose} aria-label="Close modal" data-skip-global-loading
                 className="ml-auto p-1.5 rounded-md text-secondary hover:bg-surface hover:text-on-surface transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                 <IconX size={16} stroke={1.5} />
               </button>

@@ -39,7 +39,7 @@ export default function AppShell({
             <div className="flex items-center gap-3 min-w-0">
               {/* Hamburger — mobile only */}
               <button
-                onClick={() => setSidebarOpen(true)}
+                onClick={() => setSidebarOpen(true)} data-skip-global-loading
                 className="lg:hidden p-1.5 rounded-md text-secondary hover:text-on-surface hover:bg-surface transition-colors shrink-0"
                 aria-label="Open navigation"
               >

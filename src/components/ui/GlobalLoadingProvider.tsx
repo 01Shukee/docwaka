@@ -56,40 +56,35 @@ export function GlobalLoadingProvider({ children }: { children: React.ReactNode 
   // ── Global capture-phase click listener ───────────────────────────────────
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      const target = e.target as HTMLElement;
+      // Ctrl/Cmd/Shift/Alt/middle-click open a tab or download: no navigation here.
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
-      // Find the nearest anchor or button ancestor
+      const target = e.target as HTMLElement;
       const anchor = target.closest("a[href]") as HTMLAnchorElement | null;
-      const button = target.closest("button") as HTMLButtonElement | null;
 
       if (anchor) {
-        const href = anchor.getAttribute("href") ?? "";
-        // Ignore: external links, mailto, tel, hash-only anchors, new-tab links
-        const isExternal   = /^https?:\/\//.test(href) && !href.includes(window.location.host);
-        const isSpecial    = href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("#");
-        const opensNewTab  = anchor.target === "_blank";
-        if (!isExternal && !isSpecial && !opensNewTab && href) {
-          manualLockRef.current = false;
-          setLabel(undefined);
-          setIsLoading(true);
-        }
+        if (anchor.target === "_blank" || anchor.hasAttribute("download")) return;
+        let url: URL;
+        try { url = new URL(anchor.href, window.location.href); } catch { return; }
+        if (url.origin !== window.location.origin) return;                 // external
+        if (url.pathname === window.location.pathname &&
+            url.search   === window.location.search) return;               // same page / hash-only
+        manualLockRef.current = false;
+        setLabel(undefined);
+        setIsLoading(true);
         return;
       }
 
-      if (button) {
-        // ANY button tap shows the loader, except:
-        //  - buttons explicitly opted out via data-skip-global-loading
-        //    (purely cosmetic toggles: show/hide password, hamburger menu,
-        //    tab switches, expand/collapse chevrons — anything that doesn't
-        //    trigger navigation or a real async operation)
-        //  - disabled buttons
-        const skipsGlobal = button.hasAttribute("data-skip-global-loading");
-        const isDisabled  = button.disabled;
-        if (!skipsGlobal && !isDisabled) {
-          manualLockRef.current = false;
-          setLabel(undefined);
-          setIsLoading(true);
-        }
+      // Only buttons that submit a real <form> trigger the loader. Other buttons
+      // (accept/reject/sign/approve…) run async work with no route change, so the
+      // overlay would never clear until the 8 s safety timeout — they use their
+      // own `loading` states or call startLoading()/stopLoading() explicitly.
+      const button = target.closest("button") as HTMLButtonElement | null;
+      if (button && !button.disabled && !button.hasAttribute("data-skip-global-loading") &&
+          button.type === "submit" && button.form) {
+        manualLockRef.current = false;
+        setLabel(undefined);
+        setIsLoading(true);
       }
     }
 

@@ -60,7 +60,8 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     const { user, error } = await requireAuth();
     if (error) return error;
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") return apiError("Invalid request.", 400);
     const { type } = body;
 
     if (type === "name") {
@@ -95,6 +96,10 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
       const valid = await verifyPassword(parsed.data.currentPassword, dbUser.password);
       if (!valid) {
         return apiError("Current password is incorrect.", 400);
+      }
+
+      if (parsed.data.currentPassword === parsed.data.newPassword) {
+        return apiError("New password must be different from the current one.", 400);
       }
 
       const newHash = await hashPassword(parsed.data.newPassword);

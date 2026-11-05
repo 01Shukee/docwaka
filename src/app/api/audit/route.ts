@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { AuditAction, Prisma } from "@prisma/client";
 import { requireAuth, apiError } from "@/lib/auth-helpers";
 
 /**
@@ -24,49 +25,44 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     const { searchParams } = req.nextUrl;
     const search = searchParams.get("search")?.trim() ?? "";
-    const page   = Math.max(1, parseInt(searchParams.get("page")  ?? "1",  10));
-    const limit  = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") ?? "50", 10)));
+    // parseInt("abc") is NaN, which would otherwise crash the query
+    const page   = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
+    const limit  = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") ?? "50", 10) || 50));
     const skip   = (page - 1) * limit;
 
-    // Fetch the admin user record to get departmentId for scoping
-    const fullUser = await prisma.user.findUnique({
-      where:  { id: user.id },
-      select: { departmentId: true },
-    });
-    if (!fullUser) return apiError("User not found.", 404);
-
     // ── Build role-scoped where clause (FSD §4.9) ─────────────────────────────
-    let documentFilter: object = {};
+    let documentFilter: Prisma.AuditLogWhereInput = {};
 
     if (user.role === "SYS_ADMIN") {
-      // Sees everything — no filter
       documentFilter = {};
     } else if (["HOD", "DEAN", "DEPT_ADMIN"].includes(user.role)) {
-      // Scoped to their department's documents
       documentFilter = {
         document: {
           OR: [
-            { sender:    { departmentId: fullUser.departmentId } },
-            { recipient: { departmentId: fullUser.departmentId } },
+            { sender:    { departmentId: user.departmentId } },
+            { recipient: { departmentId: user.departmentId } },
           ],
         },
       };
     } else {
-      // STAFF — only their own documents
       documentFilter = {
-        document: {
-          OR: [{ senderId: user.id }, { recipientId: user.id }],
-        },
+        document: { OR: [{ senderId: user.id }, { recipientId: user.id }] },
       };
     }
 
     // ── Search filter ─────────────────────────────────────────────────────────
-    const searchFilter = search
+    // Only match the action column when the term is a real enum value —
+    // an invalid enum in a Prisma filter throws (previously a 500 for e.g. "john").
+    const actionMatch = (Object.values(AuditAction) as string[]).includes(search.toUpperCase())
+      ? [{ action: search.toUpperCase() as Prisma.AuditLogWhereInput["action"] }]
+      : [];
+
+    const searchFilter: Prisma.AuditLogWhereInput = search
       ? {
           OR: [
-            { document: { title: { contains: search, mode: "insensitive" as const } } },
-            { user:     { name:  { contains: search, mode: "insensitive" as const } } },
-            { action:   { equals: search.toUpperCase() as any } },
+            { document: { title: { contains: search, mode: "insensitive" } } },
+            { user:     { name:  { contains: search, mode: "insensitive" } } },
+            ...actionMatch,
           ],
         }
       : {};

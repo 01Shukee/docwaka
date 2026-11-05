@@ -1,13 +1,14 @@
 // src/app/(auth)/login/page.tsx
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { IconEye, IconEyeOff, IconLogin } from "@tabler/icons-react";
 import Button from "@/components/ui/Button";
 import Input, { FormField } from "@/components/ui/Input";
+import { useGlobalLoading } from "@/components/ui/GlobalLoadingProvider";
 
 const ERROR_MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS:     "Incorrect email or password.",
@@ -17,11 +18,14 @@ const ERROR_MESSAGES: Record<string, string> = {
   CredentialsSignin:       "Incorrect email or password.",
 };
 
-function LoginContent() {
+export default function LoginPage() {
   const router       = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl  = searchParams.get("callbackUrl") ?? "/dashboard";
+  // Only same-site relative paths — blocks open redirects like //evil.com
+  const rawCallback  = searchParams.get("callbackUrl") ?? "";
+  const callbackUrl  = rawCallback.startsWith("/") && !rawCallback.startsWith("//") ? rawCallback : "/dashboard";
   const urlError     = searchParams.get("error");
+  const { stopLoading } = useGlobalLoading();
 
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
@@ -34,21 +38,32 @@ function LoginContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!email.trim() || !password) { setError("Please enter your email and password."); return; }
+
+    if (!email.trim() || !password) {
+      setError("Please enter your email and password.");
+      stopLoading(); // the global DVD screen was triggered by the submit tap — dismiss it, no navigation is happening
+      return;
+    }
+
     setLoading(true);
     const result = await signIn("credentials", { email: email.toLowerCase().trim(), password, redirect: false });
     setLoading(false);
+
     if (!result?.ok) {
-      setError(ERROR_MESSAGES[result?.error ?? ""] ?? "Sign in failed.");
+      // NextAuth v5 puts our custom codes (ACCOUNT_PENDING, …) in `code`
+      const code = (result as { code?: string } | undefined)?.code ?? result?.error ?? "";
+      setError(ERROR_MESSAGES[code] ?? "Sign in failed.");
+      stopLoading(); // login failed — no route change is coming, so clear the loader manually
       return;
     }
+
+    // Success: router.push below changes the pathname, which auto-clears the global loader
     router.push(callbackUrl);
     router.refresh();
   };
 
   return (
     <div className="w-full max-w-[400px] px-2 sm:px-0">
-      {/* Heading */}
       <div className="mb-7 text-center">
         <h1 className="text-[24px] sm:text-[26px] font-normal leading-tight text-on-surface">
           Sign in to docwaka.
@@ -58,7 +73,6 @@ function LoginContent() {
         </p>
       </div>
 
-      {/* Card */}
       <div className="bg-neutral border border-tertiary rounded-xl p-6 sm:p-8">
         {error && (
           <div role="alert" className="mb-5 px-4 py-3 rounded-md bg-red-50 border border-red-200 text-[13px] leading-5 text-red-700">
@@ -75,7 +89,7 @@ function LoginContent() {
               <Input id="password" type={showPw ? "text" : "password"} autoComplete="current-password"
                 placeholder="Enter your password" value={password}
                 onChange={e => setPassword(e.target.value)} disabled={loading} className="pr-11" />
-              <button type="button" onClick={() => setShowPw(v => !v)} aria-label={showPw ? "Hide" : "Show"}
+              <button type="button" onClick={() => setShowPw(v => !v)} aria-label={showPw ? "Hide" : "Show"} data-skip-global-loading
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:text-on-surface transition-colors">
                 {showPw ? <IconEyeOff stroke={1.5} size={15} /> : <IconEye stroke={1.5} size={15} />}
               </button>
@@ -93,14 +107,5 @@ function LoginContent() {
         <Link href="/register" className="font-medium text-on-surface hover:underline underline-offset-2">Register</Link>
       </p>
     </div>
-  );
-}
-
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={<div className="flex justify-center p-8">Loading...</div>}>
-      <LoginContent />
-    </Suspense>
   );
 }

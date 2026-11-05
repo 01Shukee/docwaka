@@ -57,7 +57,7 @@ export default function DocumentsPage() {
       {/* Tab strip */}
       <div className="flex items-center gap-1 mb-5 p-1 bg-surface rounded-full w-fit border border-tertiary">
         {(["inbox","outbox"] as Tab[]).map(t => (
-          <button key={t} onClick={() => setTab(t)} className={[
+          <button key={t} onClick={() => setTab(t)} data-skip-global-loading className={[
             "flex items-center gap-2 px-4 py-1.5 rounded-full text-[13px] sm:text-[14px] font-medium capitalize transition-colors",
             tab === t ? "bg-neutral border border-tertiary text-on-surface shadow-sm" : "text-secondary hover:text-on-surface",
           ].join(" ")}>

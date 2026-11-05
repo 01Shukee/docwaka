@@ -1,19 +1,24 @@
 // src/app/api/documents/[id]/action/route.ts
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, apiError } from "@/lib/auth-helpers";
 import { documentActionSchema } from "@/lib/validations";
+import { documentDetailSelect } from "@/lib/documents";
+import { notifyDocumentAction } from "@/lib/notifications";
 
 /**
  * POST /api/documents/[id]/action
  *
- * State machine actions — all writes sequential (no $transaction)
- * to avoid cloud DB interactive-transaction timeouts (P2028).
+ *   ACCEPT  (PENDING  → ACCEPTED)  — requires an existing signature
+ *   REJECT  (PENDING  → REJECTED)  — reason required
+ *   DELIVER (ACCEPTED → DELIVERED)
  *
- * ACCEPT  (PENDING  → ACCEPTED)  — signature must exist first
- * REJECT  (PENDING  → REJECTED)  — reason required
- * DELIVER (ACCEPTED → DELIVERED) — confirms physical delivery
+ * Each action is ONE nested update whose WHERE includes the expected status and
+ * recipient. That makes the state transition atomic (double-clicks and
+ * ACCEPT-vs-REJECT races can't both win) and writes the status change, the
+ * audit entry and the rejection log together or not at all.
  */
 export async function POST(
   req: NextRequest,
@@ -24,100 +29,68 @@ export async function POST(
     if (error) return error;
 
     const { id } = await params;
-    const body   = await req.json();
+    const body   = await req.json().catch(() => null);
 
     const parsed = documentActionSchema.safeParse(body);
     if (!parsed.success) {
       return apiError(parsed.error.errors[0]?.message ?? "Invalid input.", 400);
     }
-
     const input = parsed.data;
 
-    const document = await prisma.document.findUnique({
-      where:  { id },
-      select: { id: true, status: true, recipientId: true, senderId: true },
-    });
+    const expectedStatus = input.action === "DELIVER" ? "ACCEPTED" : "PENDING";
 
-    if (!document)                          return apiError("Document not found.", 404);
-    if (document.recipientId !== user.id)   return apiError("Only the recipient can perform this action.", 403);
-
-    // ── ACCEPT ───────────────────────────────────────────────────────────────
-    if (input.action === "ACCEPT") {
-      if (document.status !== "PENDING") {
-        return apiError(`Cannot accept a document with status: ${document.status}.`, 409);
+    /** Works out why an atomic update didn't apply, for a precise error. */
+    const diagnose = async (): Promise<NextResponse | null> => {
+      const d = await prisma.document.findUnique({
+        where: { id }, select: { status: true, recipientId: true },
+      });
+      if (!d)                        return apiError("Document not found.", 404);
+      if (d.recipientId !== user.id) return apiError("Only the recipient can perform this action.", 403);
+      if (d.status !== expectedStatus) {
+        return apiError(`Cannot ${input.action.toLowerCase()} a document with status: ${d.status}.`, 409);
       }
+      return null;
+    };
 
-      const signature = await prisma.signature.findFirst({
-        where: { documentId: id, userId: user.id },
+    if (input.action === "ACCEPT") {
+      const signature = await prisma.signature.findUnique({
+        where:  { documentId_userId: { documentId: id, userId: user.id } },
+        select: { id: true },
       });
       if (!signature) {
-        return apiError("A signature is required before accepting. Please sign first.", 400);
+        return (await diagnose()) ??
+          apiError("A signature is required before accepting. Please sign first.", 400);
       }
-
-      await prisma.document.update({
-        where: { id },
-        data:  { status: "ACCEPTED" },
-      });
-
-      try {
-        await prisma.auditLog.create({
-          data: { documentId: id, userId: user.id, action: "ACCEPTED", details: "Document accepted by recipient." },
-        });
-      } catch (e) { console.error("Audit log failed:", e); }
     }
 
-    // ── REJECT ───────────────────────────────────────────────────────────────
-    else if (input.action === "REJECT") {
-      if (document.status !== "PENDING") {
-        return apiError(`Cannot reject a document with status: ${document.status}.`, 409);
-      }
+    const data: Prisma.DocumentUpdateInput =
+      input.action === "ACCEPT"
+        ? { status: "ACCEPTED",
+            auditLogs: { create: { userId: user.id, action: "ACCEPTED", details: "Document accepted by recipient." } } }
+      : input.action === "REJECT"
+        ? { status: "REJECTED",
+            rejectionLogs: { create: { rejectedById: user.id, reason: input.reason } },
+            auditLogs:     { create: { userId: user.id, action: "REJECTED", details: `Reason: ${input.reason}` } } }
+        : { status: "DELIVERED",
+            auditLogs: { create: { userId: user.id, action: "DELIVERED", details: "Delivery confirmed by recipient." } } };
 
-      await prisma.document.update({
-        where: { id },
-        data:  { status: "REJECTED" },
+    try {
+      const document = await prisma.document.update({
+        where:  { id, recipientId: user.id, status: expectedStatus },
+        data,
+        select: documentDetailSelect, // no fileUrl: the client keeps the one it already has
       });
+      // Tell the sender what happened, after the response is sent
+      const kind = input.action === "ACCEPT" ? "ACCEPTED" : input.action === "REJECT" ? "REJECTED" : "DELIVERED";
+      after(() => notifyDocumentAction(kind, document, input.action === "REJECT" ? input.reason : undefined));
 
-      try {
-        await prisma.rejectionLog.create({
-          data: { documentId: id, rejectedById: user.id, reason: input.reason },
-        });
-        await prisma.auditLog.create({
-          data: { documentId: id, userId: user.id, action: "REJECTED", details: `Reason: ${input.reason}` },
-        });
-      } catch (e) { console.error("Rejection log failed:", e); }
-    }
-
-    // ── DELIVER ──────────────────────────────────────────────────────────────
-    else if (input.action === "DELIVER") {
-      if (document.status !== "ACCEPTED") {
-        return apiError(`Cannot deliver a document with status: ${document.status}. Must be ACCEPTED first.`, 409);
+      return NextResponse.json({ document });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+        return (await diagnose()) ?? apiError("Document changed. Please refresh and retry.", 409);
       }
-
-      await prisma.document.update({
-        where: { id },
-        data:  { status: "DELIVERED" },
-      });
-
-      try {
-        await prisma.auditLog.create({
-          data: { documentId: id, userId: user.id, action: "DELIVERED", details: "Delivery confirmed by recipient." },
-        });
-      } catch (e) { console.error("Audit log failed:", e); }
+      throw e;
     }
-
-    // ── Return updated document ───────────────────────────────────────────────
-    const updated = await prisma.document.findUnique({
-      where: { id },
-      include: {
-        sender:        { select: { id: true, name: true, email: true, department: { select: { id: true, name: true } } } },
-        recipient:     { select: { id: true, name: true, email: true, department: { select: { id: true, name: true } } } },
-        signatures:    { select: { id: true, data: true, createdAt: true, user: { select: { id: true, name: true } } } },
-        rejectionLogs: { select: { id: true, reason: true, createdAt: true, rejectedBy: { select: { id: true, name: true } } } },
-        auditLogs:     { select: { id: true, action: true, details: true, createdAt: true, user: { select: { id: true, name: true, email: true } } }, orderBy: { createdAt: "asc" } },
-      },
-    });
-
-    return NextResponse.json({ document: updated });
   } catch (err) {
     console.error("[POST /api/documents/[id]/action]", err);
     return apiError("Failed to perform action.", 500);

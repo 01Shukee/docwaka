@@ -55,7 +55,7 @@ export const ADMIN_ROLES: Role[] = ["DEPT_ADMIN", "HOD", "DEAN", "SYS_ADMIN"];
 export function getApprovableRoles(approverRole: Role): Role[] {
   switch (approverRole) {
     case "SYS_ADMIN":
-      return ["HOD", "DEAN"];
+      return ["HOD", "DEAN", "DEPT_ADMIN", "STAFF"];
     case "HOD":
     case "DEAN":
       return ["DEPT_ADMIN"];

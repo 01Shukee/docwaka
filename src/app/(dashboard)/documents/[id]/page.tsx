@@ -39,6 +39,12 @@ export default function DocumentDetailPage() {
 
   useEffect(() => { fetchDocument(); }, [fetchDocument]);
 
+  // Action endpoints don't resend the attachment, so merge instead of replacing
+  // (otherwise the file preview vanishes after accept/reject/deliver).
+  const handleUpdate = useCallback((updated: DocumentDetail) => {
+    setDocument((prev) => (prev ? { ...prev, ...updated } : updated));
+  }, []);
+
   if (loading) return <FullPageSpinner label="Loading document…" />;
 
   if (error || !document) {
@@ -99,7 +105,7 @@ export default function DocumentDetailPage() {
             </dl>
           </Card>
 
-          {document.fileUrl  && <FilePreview fileUrl={document.fileUrl} />}
+          {document.fileUrl  && <FilePreview fileUrl={document.fileUrl} kind={document.fileKind} />}
           {!document.fileUrl && (
             <div className="flex items-center gap-2 px-4 py-3 bg-surface border border-tertiary rounded-md">
               <IconFileText stroke={1.5} size={14} className="text-secondary shrink-0" />
@@ -112,10 +118,10 @@ export default function DocumentDetailPage() {
         <div className="flex flex-col gap-4 order-1 lg:order-2">
           {document.status === "REJECTED" && <RejectionCard rejectionLogs={document.rejectionLogs} />}
           {isRecipient && document.status === "PENDING"  && (
-            <ActionCard document={document} currentUserId={currentUserId} currentUserName={currentUserName} onUpdate={setDocument} />
+            <ActionCard document={document} currentUserId={currentUserId} currentUserName={currentUserName} onUpdate={handleUpdate} />
           )}
           {isRecipient && document.status === "ACCEPTED" && (
-            <DeliveryCard document={document} currentUserId={currentUserId} onUpdate={setDocument} />
+            <DeliveryCard document={document} currentUserId={currentUserId} onUpdate={handleUpdate} />
           )}
           <AuditTrail logs={document.auditLogs} />
         </div>

@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, apiError } from "@/lib/auth-helpers";
+import { sniffMime } from "@/lib/files";
 
 /**
  * POST /api/upload
@@ -22,29 +23,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     if (!file) return apiError("No file provided.", 400);
 
-    const validTypes = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
-    if (!validTypes.includes(file.type)) {
+    // Size first (cheap) using the largest allowed limit, then verify the REAL
+    // type from the file's bytes rather than the client-supplied file.type.
+    if (file.size > 16 * 1024 * 1024) return apiError("File is too large.", 400);
+
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const mime  = sniffMime(bytes);
+    if (!mime) {
       return apiError("Only PDF and image files (PNG, JPG, WebP) are accepted.", 400);
     }
-
-    const maxSize = file.type === "application/pdf"
-      ? 16 * 1024 * 1024
-      :  4 * 1024 * 1024;
-
-    if (file.size > maxSize) {
-      return apiError(
-        file.type === "application/pdf"
-          ? "PDF must be under 16 MB."
-          : "Image must be under 4 MB.",
-        400
-      );
+    if (mime !== "application/pdf" && bytes.length > 4 * 1024 * 1024) {
+      return apiError("Image must be under 4 MB.", 400);
     }
 
-    const buffer  = await file.arrayBuffer();
-    const base64  = Buffer.from(buffer).toString("base64");
-    const fileUrl = `data:${file.type};base64,${base64}`;
+    const fileUrl = `data:${mime};base64,${Buffer.from(bytes).toString("base64")}`;
 
-    return NextResponse.json({ fileUrl, fileName: file.name }, { status: 201 });
+    return NextResponse.json({ fileUrl, fileName: file.name.slice(0, 200) }, { status: 201 });
   } catch (err) {
     console.error("[POST /api/upload]", err);
     return apiError("Upload failed.", 500);

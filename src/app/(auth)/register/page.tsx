@@ -103,7 +103,7 @@ export default function RegisterPage() {
               <Input id="password" type={showPw ? "text" : "password"} autoComplete="new-password"
                 placeholder="Create a strong password" value={form.password}
                 onChange={e => update("password", e.target.value)} disabled={loading} error={!!errors.password} className="pr-11" />
-              <button type="button" onClick={() => setShowPw(v => !v)} aria-label={showPw ? "Hide" : "Show"}
+              <button type="button" onClick={() => setShowPw(v => !v)} aria-label={showPw ? "Hide" : "Show"} data-skip-global-loading
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:text-on-surface transition-colors">
                 {showPw ? <IconEyeOff stroke={1.5} size={15} /> : <IconEye stroke={1.5} size={15} />}
               </button>

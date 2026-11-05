@@ -39,7 +39,7 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
     <div role="status" aria-live="polite" className={`flex items-start gap-3 w-full max-w-sm px-4 py-3 rounded-md border border-tertiary border-l-4 bg-neutral shadow-md ${borderClass}`}>
       <Icon size={18} stroke={1.5} className={`shrink-0 mt-0.5 ${iconClass}`} />
       <p className="flex-1 text-[14px] leading-5 font-medium text-on-surface">{toast.message}</p>
-      <button onClick={() => onRemove(toast.id)} aria-label="Dismiss" className="shrink-0 text-secondary hover:text-on-surface transition-colors">
+      <button onClick={() => onRemove(toast.id)} aria-label="Dismiss" data-skip-global-loading className="shrink-0 text-secondary hover:text-on-surface transition-colors">
         <IconX size={14} stroke={1.5} />
       </button>
     </div>

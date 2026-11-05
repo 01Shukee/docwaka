@@ -13,6 +13,7 @@ export interface SessionUser {
   name:  string;
   email: string;
   role:  Role;
+  departmentId: string;
 }
 
 /**
@@ -46,6 +47,7 @@ export async function requireAuth(): Promise<
       name:  session.user.name,
       email: session.user.email,
       role:  session.user.role,
+      departmentId: session.user.departmentId,
     },
     error: null,
   };
@@ -87,8 +89,10 @@ export async function requireRole(
  * Returns true if the given role has access to the Admin panel.
  * FSD §6.3 — Admin link visible to DEPT_ADMIN, HOD, DEAN, SYS_ADMIN.
  */
+export const ADMIN_ROLES: Role[] = ["DEPT_ADMIN", "HOD", "DEAN", "SYS_ADMIN"];
+
 export function canAccessAdmin(role: Role): boolean {
-  return ["DEPT_ADMIN", "HOD", "DEAN", "SYS_ADMIN"].includes(role);
+  return ADMIN_ROLES.includes(role);
 }
 
 /**
@@ -98,7 +102,7 @@ export function canAccessAdmin(role: Role): boolean {
 export function getApprovableRoles(approverRole: Role): Role[] {
   switch (approverRole) {
     case "SYS_ADMIN":
-      return ["HOD", "DEAN"];
+      return ["HOD", "DEAN", "DEPT_ADMIN", "STAFF"];
     case "HOD":
     case "DEAN":
       return ["DEPT_ADMIN"];

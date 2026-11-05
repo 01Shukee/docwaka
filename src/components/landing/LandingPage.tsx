@@ -137,11 +137,18 @@ export default function LandingPage() {
         </div>
 
         {/* Desktop links — pushed right regardless of whether logo is present */}
-
+        <div style={{ display:"flex", alignItems:"center", gap:8, marginLeft:"auto" }} className="hidden sm:flex">
+          <Link href="/login" style={{ fontSize:13, fontWeight:500, color:"#707070", padding:"8px 18px", borderRadius:9999, border:"1px solid #E5E7EB", textDecoration:"none", background:"#fff" }}>
+            Sign in
+          </Link>
+          <Link href="/register" style={{ fontSize:13, fontWeight:700, color:"#fff", padding:"8px 18px", borderRadius:9999, background:"#141414", textDecoration:"none" }}>
+            Get started →
+          </Link>
+        </div>
 
         {/* Mobile hamburger */}
         <button
-          onClick={() => setMenuOpen(v=>!v)}
+          onClick={() => setMenuOpen(v=>!v)} data-skip-global-loading
           className="sm:hidden"
           aria-label="Menu"
           style={{ padding:8, background:"none", border:"none", cursor:"pointer", color:"#707070", marginLeft:"auto" }}
@@ -207,7 +214,7 @@ export default function LandingPage() {
             {/* Slide dots */}
             <div style={{ display:"flex", gap:6, marginBottom:20 }}>
               {SLIDES.map((_,i) => (
-                <button key={i} onClick={()=>setSlide(i)} style={{ width:i===slide?24:6, height:6, borderRadius:9999, background:i===slide?"#fff":"rgba(255,255,255,0.25)", border:"none", cursor:"pointer", transition:"all 300ms", padding:0 }} />
+                <button key={i} onClick={()=>setSlide(i)} data-skip-global-loading style={{ width:i===slide?24:6, height:6, borderRadius:9999, background:i===slide?"#fff":"rgba(255,255,255,0.25)", border:"none", cursor:"pointer", transition:"all 300ms", padding:0 }} />
               ))}
             </div>
 
@@ -308,7 +315,7 @@ export default function LandingPage() {
               <p style={{ fontSize:10, fontWeight:700, color:"#9CA3AF", textTransform:"uppercase", letterSpacing:"0.12em", marginBottom:12 }}>Process</p>
               <h2 style={{ fontSize:"clamp(22px,4vw,32px)", fontWeight:800, letterSpacing:"-0.5px", lineHeight:"1.2", marginBottom:24 }}>Four steps.<br />Zero lost documents.</h2>
               {STEPS.map((step,i) => (
-                <div key={step.n} onClick={()=>setActiveStep(i)} style={{ display:"flex", gap:16, padding:"16px 0", borderBottom: i<3 ? "1px solid #EBEBEB" : "none", cursor:"pointer" }}>
+                <div key={step.n} onClick={()=>setActiveStep(i)} data-skip-global-loading style={{ display:"flex", gap:16, padding:"16px 0", borderBottom: i<3 ? "1px solid #EBEBEB" : "none", cursor:"pointer" }}>
                   <div style={{ fontSize:10, fontWeight:800, color: activeStep===i?"#141414":"#D1D5DB", minWidth:24, marginTop:3, transition:"color 200ms" }}>{step.n}</div>
                   <div style={{ flex:1 }}>
                     <div style={{ fontSize:14, fontWeight:700, color:"#141414", marginBottom:3 }}>{step.t}</div>
@@ -463,7 +470,7 @@ export default function LandingPage() {
 
 function RoleNode({ role, active, onClick }: { role: typeof ROLES[0]; active: boolean; onClick: () => void }) {
   return (
-    <button onClick={onClick} style={{ position:"relative", background: active?"#141414":"#fff", border:`1px solid ${active?"#141414":"#E5E7EB"}`, borderRadius:10, padding:"10px 18px", textAlign:"center", minWidth:108, cursor:"pointer", transform: active?"translateY(-2px)":"none", boxShadow: active?"0 4px 16px rgba(20,20,20,0.14)":"none", transition:"all 150ms", fontFamily:"inherit" }}>
+    <button onClick={onClick} data-skip-global-loading style={{ position:"relative", background: active?"#141414":"#fff", border:`1px solid ${active?"#141414":"#E5E7EB"}`, borderRadius:10, padding:"10px 18px", textAlign:"center", minWidth:108, cursor:"pointer", transform: active?"translateY(-2px)":"none", boxShadow: active?"0 4px 16px rgba(20,20,20,0.14)":"none", transition:"all 150ms", fontFamily:"inherit" }}>
       {role.b && <span style={{ position:"absolute", top:-8, right:-8, background:"#141414", color:"#fff", fontSize:9, fontWeight:700, padding:"2px 7px", borderRadius:9999 }}>{role.b}</span>}
       <div style={{ fontSize:12, fontWeight:700, color: active?"#fff":"#141414" }}>{role.l}</div>
       <div style={{ fontSize:10, color: active?"rgba(255,255,255,0.5)":"#9CA3AF", marginTop:2, whiteSpace:"nowrap" }}>{role.s}</div>

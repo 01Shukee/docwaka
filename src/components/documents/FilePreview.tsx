@@ -8,11 +8,14 @@ import { Card } from "@/components/ui/Card";
 
 interface FilePreviewProps {
   fileUrl:    string;
+  /** Provided by the API; needed because served URLs have no file extension. */
+  kind?:      "pdf" | "image" | null;
   fileName?:  string;
   className?: string;
 }
 
-function getFileType(url: string): "pdf" | "image" | "unknown" {
+function getFileType(url: string, kind?: "pdf" | "image" | null): "pdf" | "image" | "unknown" {
+  if (kind) return kind;
   const lower = url.toLowerCase().split("?")[0];
   if (lower.endsWith(".pdf")) return "pdf";
   if (/\.(png|jpe?g|gif|webp|svg)$/.test(lower)) return "image";
@@ -25,14 +28,15 @@ function getFileType(url: string): "pdf" | "image" | "unknown" {
  */
 export default function FilePreview({
   fileUrl,
+  kind,
   fileName,
   className = "",
 }: FilePreviewProps) {
   const [loadError, setLoadError] = useState(false);
-  const fileType = getFileType(fileUrl);
+  const fileType = getFileType(fileUrl, kind);
 
   const displayName =
-    fileName ?? fileUrl.split("/").pop()?.split("?")[0] ?? "Attachment";
+    fileName ?? (kind ? "Attachment" : fileUrl.split("/").pop()?.split("?")[0]) ?? "Attachment";
 
   return (
     <Card padding="none" className={`overflow-hidden ${className}`}>

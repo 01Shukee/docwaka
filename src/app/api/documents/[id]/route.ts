@@ -3,17 +3,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, apiError } from "@/lib/auth-helpers";
+import { documentDetailSelect, canViewDocument, presentFile } from "@/lib/documents";
 
 /**
- * GET /api/documents/[id]
- *
- * FSD §4.4 / §5.3 — Returns full document detail including:
- *   - Metadata (title, description, sender, recipient, status, dates)
- *   - Signatures
- *   - Rejection logs
- *   - Audit trail (chronological)
- *
- * Access: restricted to the document's sender OR recipient (FSD §6.6).
+ * GET /api/documents/[id] — full detail (signatures, rejections, audit trail).
+ * Access: sender/recipient, SYS_ADMIN, or an admin of the sender's/recipient's department.
  */
 export async function GET(
   _req: NextRequest,
@@ -25,52 +19,22 @@ export async function GET(
 
     const { id } = await params;
 
-    const document = await prisma.document.findUnique({
-      where: { id },
-      include: {
-        sender: {
-          select: { id: true, name: true, email: true, department: { select: { id: true, name: true } } },
-        },
-        recipient: {
-          select: { id: true, name: true, email: true, department: { select: { id: true, name: true } } },
-        },
-        signatures: {
-          select: { id: true, data: true, createdAt: true, user: { select: { id: true, name: true } } },
-          orderBy: { createdAt: "asc" },
-        },
-        rejectionLogs: {
-          select: {
-            id: true, reason: true, createdAt: true,
-            rejectedBy: { select: { id: true, name: true } },
-          },
-          orderBy: { createdAt: "desc" },
-        },
-        auditLogs: {
-          select: {
-            id: true, action: true, details: true, createdAt: true,
-            user: { select: { id: true, name: true, email: true } },
-          },
-          orderBy: { createdAt: "asc" },
-        },
-      },
+    const row = await prisma.document.findUnique({
+      where:  { id },
+      select: { ...documentDetailSelect, fileUrl: true, senderId: true, recipientId: true },
     });
+    if (!row) return apiError("Document not found.", 404);
 
-    if (!document) {
-      return apiError("Document not found.", 404);
-    }
+    const { fileUrl, senderId, recipientId, ...document } = row;
 
-    // Access control — only sender or recipient may view this document
-    const isParticipant =
-      document.senderId === user.id || document.recipientId === user.id;
+    const allowed = canViewDocument(user, {
+      senderId, recipientId,
+      senderDeptId:    document.sender.department.id,
+      recipientDeptId: document.recipient.department.id,
+    });
+    if (!allowed) return apiError("You do not have permission to view this document.", 403);
 
-    // SYS_ADMIN and higher roles may view any document for oversight
-    const isAdminRole = ["SYS_ADMIN", "HOD", "DEAN", "DEPT_ADMIN"].includes(user.role);
-
-    if (!isParticipant && !isAdminRole) {
-      return apiError("You do not have permission to view this document.", 403);
-    }
-
-    return NextResponse.json({ document });
+    return NextResponse.json({ document: { ...document, ...presentFile(id, fileUrl) } });
   } catch (err) {
     console.error("[GET /api/documents/[id]]", err);
     return apiError("Failed to fetch document.", 500);
